@@ -132,11 +132,10 @@ Full details of each code change are in `patches/key-fixes.md`.
 
 ## Credits
 
-* Paper authors: Amir Zandieh, Majid Daliri, Majid Hadian, Vahab Mirrokni (Google Research)
-* Aaryan Kapoor: llama.cpp fork with tq3\_0 implementation (branch turboquant-tq3\_0)
-* Tom Turney (TheTom): turboquant\_plus Python prototype and llama-cpp-turboquant fork
-* Prince Canuma: MLX implementation reference and community benchmarks
-* Yash (UF Blueberry Breeding and Genomics Lab): evaluation, debugging, and fixes documented in this repository
+* Paper authors: [Amir Zandieh](https://github.com/amirzandieh), Majid Daliri, Majid Hadian, [Vahab Mirrokni](https://research.google/people/mirrokni/) (Google Research)
+* [Aaryan Kapoor](https://github.com/Aaryan-Kapoor): llama.cpp fork with tq3\_0 implementation (branch turboquant-tq3\_0)
+* [Tom Turney](https://github.com/TheTom) (TheTom): turboquant\_plus Python prototype and llama-cpp-turboquant fork
+* [Prince Canuma](https://github.com/Blaizzy): MLX implementation reference and community benchmarks
 
 ## Paper Reference
 
