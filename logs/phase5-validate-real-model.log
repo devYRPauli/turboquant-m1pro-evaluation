@@ -1,0 +1,85 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+======================================================================
+TURBOQUANT PHASE A: REAL MODEL VALIDATION
+Model: Qwen/Qwen3-1.7B (head_dim=128, same as Qwen 27B)
+======================================================================
+Loading Qwen/Qwen3-1.7B...
+Fetching 2 files:   0%|          | 0/2 [00:00<?, ?it/s]Fetching 2 files:  50%|█████     | 1/2 [06:56<06:56, 416.73s/it]Fetching 2 files: 100%|██████████| 2/2 [06:56<00:00, 208.36s/it]
+Loading weights:   0%|          | 0/311 [00:00<?, ?it/s]Loading weights:   0%|          | 1/311 [00:02<13:44,  2.66s/it]Loading weights:   1%|          | 2/311 [00:02<06:08,  1.19s/it]Loading weights:  47%|████▋     | 147/311 [00:02<00:01, 93.51it/s]Loading weights:  62%|██████▏   | 194/311 [00:03<00:01, 78.36it/s]Loading weights:  72%|███████▏  | 225/311 [00:04<00:01, 72.02it/s]Loading weights:  79%|███████▉  | 247/311 [00:04<00:00, 68.50it/s]Loading weights:  85%|████████▍ | 263/311 [00:04<00:00, 70.71it/s]Loading weights:  89%|████████▉ | 277/311 [00:05<00:00, 71.09it/s]Loading weights:  93%|█████████▎| 289/311 [00:05<00:00, 67.43it/s]Loading weights:  96%|█████████▌| 299/311 [00:05<00:00, 64.17it/s]Loading weights:  99%|█████████▉| 308/311 [00:05<00:00, 62.02it/s]Loading weights: 100%|██████████| 311/311 [00:05<00:00, 54.61it/s]
+The following generation flags are not valid and may be ignored: ['top_p', 'top_k']. Set `TRANSFORMERS_VERBOSITY=info` for more details.
+  Loaded: 1721M params
+
+  Extracting KV cache for prompt (232 chars)...
+  Extracted in 2.4s
+  K shape: (28, 8, 37, 128), V shape: (28, 8, 37, 128)
+
+======================================================================
+KV CACHE TENSOR DISTRIBUTION ANALYSIS
+======================================================================
+
+  K cache: shape (28, 8, 37, 128)
+    Value range:     [-359.1276, 348.1403]
+    Mean:            0.011749
+    Std:             5.068100
+    Vector norms:    mean=43.6988, std=37.1240, min=6.7989, max=365.8647
+    Kurtosis:        918.01 (Gaussian=3.0)
+
+  V cache: shape (28, 8, 37, 128)
+    Value range:     [-172.8965, 152.3097]
+    Mean:            -0.032469
+    Std:             8.310225
+    Vector norms:    mean=55.4799, std=75.9063, min=0.2427, max=603.7837
+    Kurtosis:        25.10 (Gaussian=3.0)
+
+======================================================================
+COMPRESSION QUALITY ON REAL KV TENSORS
+======================================================================
+
+  Model KV shape: (28, 8, 37, 128)
+  Total vectors: 8288
+  Original size: 8,486,912 bytes (8.1 MB)
+
+  Config                        K MSE        V MSE   K Cosine    Ratio
+  ──────────────────────────────────────────────────────────────────
+  Uniform 2-bit           14.71381516   8.05282794   0.801550     3.8×
+  Outlier 2.5-bit          8.52398396  25.27656174   0.851696    10.7×
+  Uniform 3-bit            4.72429607   2.34656273   0.921966     2.6×
+  Outlier 3.5-bit          2.68624210   7.87084484   0.945181     8.0×
+  Uniform 4-bit            1.34233593   0.64829915   0.975231     1.9×
+
+======================================================================
+ATTENTION QUALITY TEST
+======================================================================
+
+  Testing attention output quality per layer (using real K/V from layer)...
+  Config                Avg Attn Cosine   Max Attn Error
+  ──────────────────────────────────────────────────────
+  3-bit uniform                0.640913         1.171046
+  3.5-bit outlier              0.724851         1.035064
+  4-bit uniform                0.818580         0.774358
+
+======================================================================
+NEEDLE-IN-A-HAYSTACK TEST
+======================================================================
+
+  Prompt length: 920 tokens
+  Needle: 'The secret code is TURBOQUANT42.'
+  Response:  
+
+This is some filler text about various topics. This is some filler text about various topics. Thi...
+  Needle found: ❌ NO
+
+======================================================================
+SUMMARY
+======================================================================
+
+  Model: Qwen/Qwen3-1.7B
+  KV shape: (28, 8, 37, 128)
+  Uniform 2-bit: ratio=3.8×, K cosine=0.8015, K MSE=14.71381516
+  Outlier 2.5-bit: ratio=10.7×, K cosine=0.8517, K MSE=8.52398396
+  Uniform 3-bit: ratio=2.6×, K cosine=0.9220, K MSE=4.72429607
+  Outlier 3.5-bit: ratio=8.0×, K cosine=0.9452, K MSE=2.68624210
+  Uniform 4-bit: ratio=1.9×, K cosine=0.9752, K MSE=1.34233593
+
+  ✅ Phase A validation complete.
+  Next: Phase B — port to llama.cpp for real inference testing.

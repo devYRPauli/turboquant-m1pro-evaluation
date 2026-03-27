@@ -1,0 +1,12 @@
+diff --git a/ggml/src/ggml-metal/ggml-metal.metal b/ggml/src/ggml-metal/ggml-metal.metal
+index 282767567..18f27a7ed 100644
+--- a/ggml/src/ggml-metal/ggml-metal.metal
++++ b/ggml/src/ggml-metal/ggml-metal.metal
+@@ -6723,6 +6723,7 @@ template [[host_name("kernel_flash_attn_ext_turbo3_dk256_dv256")]] kernel flash_
+ template [[host_name("kernel_flash_attn_ext_turbo3_dk320_dv256")]] kernel flash_attn_ext_t kernel_flash_attn_ext<FA_TYPES, block_turbo3_0, 2, dequantize_turbo3_0, block_turbo3_0, 2, dequantize_turbo3_0, 320, 256>;
+ template [[host_name("kernel_flash_attn_ext_turbo3_dk576_dv512")]] kernel flash_attn_ext_t kernel_flash_attn_ext<FA_TYPES, block_turbo3_0, 2, dequantize_turbo3_0, block_turbo3_0, 2, dequantize_turbo3_0, 576, 512>;
+ 
++
+ #undef FA_TYPES
+ #undef FA_TYPES_BF
+ #undef FA_TYPES_F32

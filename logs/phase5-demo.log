@@ -1,0 +1,76 @@
+============================================================
+SINGLE VECTOR DEMO
+============================================================
+
+  2-bit TurboQuant (d=128):
+    MSE:              0.006008
+    Cosine similarity: 0.744164
+    Compression ratio: 7.1×
+    Quantize time:     0.07 ms
+    Dequantize time:   0.02 ms
+
+  3-bit TurboQuant (d=128):
+    MSE:              0.004260
+    Cosine similarity: 0.827214
+    Compression ratio: 4.9×
+    Quantize time:     0.04 ms
+    Dequantize time:   0.01 ms
+
+  4-bit TurboQuant (d=128):
+    MSE:              0.002938
+    Cosine similarity: 0.855832
+    Compression ratio: 3.8×
+    Quantize time:     0.07 ms
+    Dequantize time:   0.02 ms
+
+============================================================
+KV CACHE DEMO
+============================================================
+
+  K=3-bit, V=3-bit (layers=4, heads=8, seq=512, d=128):
+    K cache MSE:       0.181920
+    V cache MSE:       0.033934
+    Original size:     4.0 MB
+    Compressed size:   1.6 MB
+    Compression ratio: 2.6×
+    Compress time:     0.09s
+    Decompress time:   0.02s
+
+  K=4-bit, V=3-bit (layers=4, heads=8, seq=512, d=128):
+    K cache MSE:       0.054934
+    V cache MSE:       0.033934
+    Original size:     4.0 MB
+    Compressed size:   1.8 MB
+    Compression ratio: 2.2×
+    Compress time:     0.10s
+    Decompress time:   0.02s
+
+  K=4-bit, V=4-bit (layers=4, heads=8, seq=512, d=128):
+    K cache MSE:       0.054934
+    V cache MSE:       0.009318
+    Original size:     4.0 MB
+    Compressed size:   2.1 MB
+    Compression ratio: 1.9×
+    Compress time:     0.11s
+    Decompress time:   0.02s
+
+============================================================
+INNER PRODUCT PRESERVATION DEMO
+============================================================
+
+  2-bit TurboQuant (d=256, 1000 random pairs, single-side):
+    Mean |IP error|:  0.040149
+    Max |IP error|:   0.164946
+    Std |IP error|:   0.028658
+
+  3-bit TurboQuant (d=256, 1000 random pairs, single-side):
+    Mean |IP error|:  0.020364
+    Max |IP error|:   0.092529
+    Std |IP error|:   0.016199
+
+  4-bit TurboQuant (d=256, 1000 random pairs, single-side):
+    Mean |IP error|:  0.011074
+    Max |IP error|:   0.064750
+    Std |IP error|:   0.008694
+
+✅ All demos complete.

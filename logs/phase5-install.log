@@ -1,0 +1,48 @@
+Obtaining file:///Users/yashrajpandey/Projects/turboquant-m1pro/turboquant_plus
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Checking if build backend supports build_editable: started
+  Checking if build backend supports build_editable: finished with status 'done'
+  Getting requirements to build editable: started
+  Getting requirements to build editable: finished with status 'done'
+  Preparing editable metadata (pyproject.toml): started
+  Preparing editable metadata (pyproject.toml): finished with status 'done'
+Collecting numpy>=1.24 (from turboquant==0.1.0)
+  Downloading numpy-2.4.3-cp312-cp312-macosx_14_0_arm64.whl.metadata (6.6 kB)
+Collecting scipy>=1.10 (from turboquant==0.1.0)
+  Downloading scipy-1.17.1-cp312-cp312-macosx_14_0_arm64.whl.metadata (62 kB)
+Collecting pytest>=7.0 (from turboquant==0.1.0)
+  Downloading pytest-9.0.2-py3-none-any.whl.metadata (7.6 kB)
+Collecting pytest-cov>=4.0 (from turboquant==0.1.0)
+  Downloading pytest_cov-7.1.0-py3-none-any.whl.metadata (32 kB)
+Collecting iniconfig>=1.0.1 (from pytest>=7.0->turboquant==0.1.0)
+  Downloading iniconfig-2.3.0-py3-none-any.whl.metadata (2.5 kB)
+Collecting packaging>=22 (from pytest>=7.0->turboquant==0.1.0)
+  Downloading packaging-26.0-py3-none-any.whl.metadata (3.3 kB)
+Collecting pluggy<2,>=1.5 (from pytest>=7.0->turboquant==0.1.0)
+  Downloading pluggy-1.6.0-py3-none-any.whl.metadata (4.8 kB)
+Collecting pygments>=2.7.2 (from pytest>=7.0->turboquant==0.1.0)
+  Downloading pygments-2.19.2-py3-none-any.whl.metadata (2.5 kB)
+Collecting coverage>=7.10.6 (from coverage[toml]>=7.10.6->pytest-cov>=4.0->turboquant==0.1.0)
+  Downloading coverage-7.13.5-cp312-cp312-macosx_11_0_arm64.whl.metadata (8.5 kB)
+Downloading numpy-2.4.3-cp312-cp312-macosx_14_0_arm64.whl (5.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.2/5.2 MB 9.4 MB/s  0:00:00
+Downloading pytest-9.0.2-py3-none-any.whl (374 kB)
+Downloading pluggy-1.6.0-py3-none-any.whl (20 kB)
+Downloading iniconfig-2.3.0-py3-none-any.whl (7.5 kB)
+Downloading packaging-26.0-py3-none-any.whl (74 kB)
+Downloading pygments-2.19.2-py3-none-any.whl (1.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.2/1.2 MB 8.1 MB/s  0:00:00
+Downloading pytest_cov-7.1.0-py3-none-any.whl (22 kB)
+Downloading coverage-7.13.5-cp312-cp312-macosx_11_0_arm64.whl (219 kB)
+Downloading scipy-1.17.1-cp312-cp312-macosx_14_0_arm64.whl (20.3 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 20.3/20.3 MB 9.5 MB/s  0:00:02
+Building wheels for collected packages: turboquant
+  Building editable for turboquant (pyproject.toml): started
+  Building editable for turboquant (pyproject.toml): finished with status 'done'
+  Created wheel for turboquant: filename=turboquant-0.1.0-0.editable-py3-none-any.whl size=6817 sha256=977f9b8ad62ca7ff32da361419576a5ff50691c30921075ab5f2da9b2b193d9a
+  Stored in directory: /private/var/folders/sm/w2cttndj0mn3y5qmv1cn5zk40000gn/T/pip-ephem-wheel-cache-q1krlk0v/wheels/e2/f2/1e/0de23e93335ee0198080602b85793649adebcc5c087bb51a5f
+Successfully built turboquant
+Installing collected packages: pygments, pluggy, packaging, numpy, iniconfig, coverage, scipy, pytest, turboquant, pytest-cov
+
+Successfully installed coverage-7.13.5 iniconfig-2.3.0 numpy-2.4.3 packaging-26.0 pluggy-1.6.0 pygments-2.19.2 pytest-9.0.2 pytest-cov-7.1.0 scipy-1.17.1 turboquant-0.1.0

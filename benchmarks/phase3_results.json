@@ -1,0 +1,217 @@
+[
+  {
+    "runner": "ollama",
+    "target_tokens": 2000,
+    "actual_tokens": 2010,
+    "needle_pos_tokens": 898,
+    "elapsed_s": 6.3259779169993635,
+    "tokens_per_s": 52.5,
+    "peak_sys_delta_mb": 1299.0,
+    "mlx_peak_mb": 0.0,
+    "needle_score": 1.0,
+    "found_keywords": [
+      "FROSTBLOCK-7",
+      "VcMYB4"
+    ],
+    "response_preview": "The name of the disease-resistance allele found in the blueberry accession UF-B4291 is FROSTBLOCK-7. It was identified in the VcMYB4 locus.",
+    "error": "",
+    "kv_theoretical_mb": 70.6640625
+  },
+  {
+    "runner": "mlx_baseline",
+    "target_tokens": 2000,
+    "actual_tokens": 2010,
+    "needle_pos_tokens": 898,
+    "elapsed_s": 4.7,
+    "tokens_per_s": 17.0,
+    "peak_sys_delta_mb": 1948.4,
+    "mlx_peak_mb": 2545.5,
+    "needle_score": 1.0,
+    "found_keywords": [
+      "FROSTBLOCK-7",
+      "VcMYB4"
+    ],
+    "response_preview": "The name of the disease-resistance allele found in blueberry accession UF-B4291 is FROSTBLOCK-7, and it was identified in the VcMYB4 locus. The passage states that this allele was identified through",
+    "error": "",
+    "kv_theoretical_mb": 70.6640625
+  },
+  {
+    "runner": "mlx_turbo",
+    "target_tokens": 2000,
+    "actual_tokens": 2010,
+    "needle_pos_tokens": 898,
+    "elapsed_s": 8.73,
+    "tokens_per_s": 9.2,
+    "peak_sys_delta_mb": 449.3,
+    "mlx_peak_mb": 2698.4,
+    "needle_score": 0.5,
+    "found_keywords": [
+      "VcMYB4"
+    ],
+    "response_preview": "The name of the disease-resistance allele found in blueberry accession UF-B4291 is FROSTst7, and it was identified in the VcMYB4 locus through GWAS analysis of 847 Vaccinium accessions screened for l",
+    "error": "",
+    "kv_theoretical_mb": 19.874267578125
+  },
+  {
+    "runner": "ollama",
+    "target_tokens": 4000,
+    "actual_tokens": 4007,
+    "needle_pos_tokens": 1905,
+    "elapsed_s": 10.028936792000422,
+    "tokens_per_s": 49.9,
+    "peak_sys_delta_mb": 970.9,
+    "mlx_peak_mb": 0.0,
+    "needle_score": 1.0,
+    "found_keywords": [
+      "FROSTBLOCK-7",
+      "VcMYB4"
+    ],
+    "response_preview": "The name of the disease-resistance allele found in the blueberry accession UF-B4291 is FROSTBLOCK-7. It was identified in the VcMYB4 locus.",
+    "error": "",
+    "kv_theoretical_mb": 140.87109375
+  },
+  {
+    "runner": "mlx_baseline",
+    "target_tokens": 4000,
+    "actual_tokens": 4007,
+    "needle_pos_tokens": 1905,
+    "elapsed_s": 8.54,
+    "tokens_per_s": 9.4,
+    "peak_sys_delta_mb": 410.6,
+    "mlx_peak_mb": 2620.8,
+    "needle_score": 1.0,
+    "found_keywords": [
+      "FROSTBLOCK-7",
+      "VcMYB4"
+    ],
+    "response_preview": "The name of the disease-resistance allele found in blueberry accession UF-B4291 is FROSTBLOCK-7, and it was identified in the VcMYB4 locus. The passage states that this allele was identified through",
+    "error": "",
+    "kv_theoretical_mb": 140.87109375
+  },
+  {
+    "runner": "mlx_turbo",
+    "target_tokens": 4000,
+    "actual_tokens": 4007,
+    "needle_pos_tokens": 1905,
+    "elapsed_s": 15.38,
+    "tokens_per_s": 5.2,
+    "peak_sys_delta_mb": 1272.8,
+    "mlx_peak_mb": 2804.6,
+    "needle_score": 1.0,
+    "found_keywords": [
+      "FROSTBLOCK-7",
+      "VcMYB4"
+    ],
+    "response_preview": ":\nThe name of the disease-resistance allele found in blueberry accession UF-B4291 is called FROstblock-7. it was identified in the VcMYB4 locus. To summarize the key information:\n\nThe blueberry access",
+    "error": "",
+    "kv_theoretical_mb": 39.6199951171875
+  },
+  {
+    "runner": "ollama",
+    "target_tokens": 8000,
+    "actual_tokens": 8017,
+    "needle_pos_tokens": 3902,
+    "elapsed_s": 20.8470084999999,
+    "tokens_per_s": 40.5,
+    "peak_sys_delta_mb": 1115.4,
+    "mlx_peak_mb": 0.0,
+    "needle_score": 1.0,
+    "found_keywords": [
+      "FROSTBLOCK-7",
+      "VcMYB4"
+    ],
+    "response_preview": "The name of the disease-resistance allele found in the blueberry accession UF-B4291 is FROSTBLOCK-7. It was identified in the VcMYB4 locus.",
+    "error": "",
+    "kv_theoretical_mb": 281.84765625
+  },
+  {
+    "runner": "mlx_baseline",
+    "target_tokens": 8000,
+    "actual_tokens": 8017,
+    "needle_pos_tokens": 3902,
+    "elapsed_s": 17.25,
+    "tokens_per_s": 4.6,
+    "peak_sys_delta_mb": 1084.9,
+    "mlx_peak_mb": 2753.3,
+    "needle_score": 1.0,
+    "found_keywords": [
+      "FROSTBLOCK-7",
+      "VcMYB4"
+    ],
+    "response_preview": "The name of the disease-resistance allele found in blueberry accession UF-B4291 is FROSTBLOCK-7, and it was identified in the VcMYB4 locus. The passage states that this allele was identified through",
+    "error": "",
+    "kv_theoretical_mb": 281.84765625
+  },
+  {
+    "runner": "mlx_turbo",
+    "target_tokens": 8000,
+    "actual_tokens": 8017,
+    "needle_pos_tokens": 3902,
+    "elapsed_s": 30.43,
+    "tokens_per_s": 2.6,
+    "peak_sys_delta_mb": 1535.7,
+    "mlx_peak_mb": 3029.4,
+    "needle_score": 1.0,
+    "found_keywords": [
+      "FROSTBLOCK-7",
+      "VcMYB4"
+    ],
+    "response_preview": "The name of the disease-resistance allele found in blueberry accession UF-B4291 is FROSTBLOCK-7, and it was identified in the VcMYB4 locus.\nThe passage states: \"The blueberry plant accession designat",
+    "error": "",
+    "kv_theoretical_mb": 79.2696533203125
+  },
+  {
+    "runner": "ollama",
+    "target_tokens": 16000,
+    "actual_tokens": 15947,
+    "needle_pos_tokens": 7912,
+    "elapsed_s": 49.251424957999916,
+    "tokens_per_s": 37.5,
+    "peak_sys_delta_mb": 89.8,
+    "mlx_peak_mb": 0.0,
+    "needle_score": 1.0,
+    "found_keywords": [
+      "FROSTBLOCK-7",
+      "VcMYB4"
+    ],
+    "response_preview": "The name of the disease-resistance allele found in the experimental blueberry accession designated UF-B4291 is FROSTBLOCK-7. It was identified in the VcMYB4 locus.",
+    "error": "",
+    "kv_theoretical_mb": 560.63671875
+  },
+  {
+    "runner": "mlx_baseline",
+    "target_tokens": 16000,
+    "actual_tokens": 15947,
+    "needle_pos_tokens": 7912,
+    "elapsed_s": 39.88,
+    "tokens_per_s": 2.0,
+    "peak_sys_delta_mb": 2484.2,
+    "mlx_peak_mb": 3076.8,
+    "needle_score": 1.0,
+    "found_keywords": [
+      "FROSTBLOCK-7",
+      "VcMYB4"
+    ],
+    "response_preview": "The name of the disease-resistance allele found in blueberry accession UF-B4291 is FROSTBLOCK-7, and it was identified in the VcMYB4 locus.\n\nTo summarize the relevant information from the passage:\n1.",
+    "error": "",
+    "kv_theoretical_mb": 560.63671875
+  },
+  {
+    "runner": "mlx_turbo",
+    "target_tokens": 16000,
+    "actual_tokens": 15947,
+    "needle_pos_tokens": 7912,
+    "elapsed_s": 71.44,
+    "tokens_per_s": 1.1,
+    "peak_sys_delta_mb": 1273.8,
+    "mlx_peak_mb": 3303.7,
+    "needle_score": 1.0,
+    "found_keywords": [
+      "FROSTBLOCK-7",
+      "VcMYB4"
+    ],
+    "response_preview": "The name of the disease-resistance allele found in blueberry accession UF-B4291 is FROSTBLOCK-7 and it was identified in the VcMYB4 locus.\n\nTo summarize the the information provided in the passage:",
+    "error": "",
+    "kv_theoretical_mb": 157.6790771484375
+  }
+]
