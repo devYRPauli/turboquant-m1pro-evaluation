@@ -44,6 +44,10 @@ The fix as implemented in `benchmarks/test_hybrid_needle.py`:
 
 Both changes together, combined with the Hybrid K5/V4 configuration described in Finding 2, moved needle retrieval from 0% to 100% at every tested context length (2K, 4K, 8K, 16K).
 
+### Upstream Status
+
+The QJL orthogonal projection and `sqrt(d)` scale factor fixes have been submitted upstream to the TheTom turboquant\_plus reference Python implementation as pull request 93: https://github.com/TheTom/turboquant_plus/pull/93. The pull request also adds a `damping` parameter (default 0.7) on the dequantize path, which was the stable operating point validated on M1 Pro 16K-context runs.
+
 ---
 
 ## Finding 2: Keys Are More Sensitive Than Values
@@ -97,6 +101,8 @@ The asymmetry insight is consistent with the broader literature on attention qua
 
 **Significance:** This bug was a genuine software defect, not a hardware limitation. M1 Pro can run TurboQuant in this fork after the fix. The Metal Tensor API log line is printed during Metal device initialization regardless of what KV cache type is in use, and its presence does not indicate that the crash was Metal-related.
 
+**Upstream status:** The same bug was independently diagnosed and fixed upstream by wxtry on 2026-03-29 in commit 70e45b7e on the TheTom llama-cpp-turboquant `feature/turboquant-kv-cache` branch. The upstream version reserves three extra slots rather than two, accounting for a third shared tensor (`turbo_innerq_scale_inv`) added in a later commit. No separate pull request from this evaluation was required.
+
 ### Bug B: Missing Metal Support for tq3\_0 (Aaryan Kapoor fork)
 
 **Location:** `ggml/src/ggml-metal/ggml-metal.metal` and `ggml/src/ggml-metal/ggml-metal-device.m`
@@ -130,6 +136,10 @@ After these additions, the binary rebuilt cleanly and the run completed instead 
 **Fix 2 (zero blocks):** When `original_norm < 1e-9`, set `d = 0` and zero all packed quantization data. On decode, a zero scale produces a zero output with no noise.
 
 After both fixes, K=tq3\_0 paths produced coherent output on Metal and CPU. The sanity prompt ("What is the capital of France?") answered correctly in all configurations. Needle retrieval at 2K and 4K both passed, with both required facts (FROSTBLOCK-7 and VcMYB4) present in the responses.
+
+### Upstream Status for Bugs B and C
+
+The Metal GPU support additions for tq3\_0 (Bug B) and the norm correction plus zero block handling (Bug C) have been submitted upstream to the Aaryan Kapoor llama.cpp fork on the `turboquant-tq3_0` branch as pull request 1: https://github.com/Aaryan-Kapoor/llama.cpp/pull/1. The pull request is structured as two logical commits, one per fix, so each change can be reviewed independently.
 
 ---
 

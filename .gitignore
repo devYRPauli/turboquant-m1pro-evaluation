@@ -1,1 +1,5 @@
 logs/phase3-q8_0.log
+
+# Private prompts used while assembling the repo (not findings)
+CLAUDE.md
+FINAL_AUDIT_PROMPT.md

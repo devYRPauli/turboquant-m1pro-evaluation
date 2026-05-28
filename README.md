@@ -111,6 +111,16 @@ KV memory savings at 16K tokens:
 
 The speed penalty in the MLX path is due to unoptimized Python-level dequantization including full 128x128 matrix multiplications. The memory savings are real and theoretically 4x or greater.
 
+## Upstream Contributions
+
+The five fixes documented above have been published back upstream where appropriate:
+
+* QJL orthogonal projection and `sqrt(d)` scale factor: pull request to TheTom turboquant\_plus at https://github.com/TheTom/turboquant_plus/pull/93
+* tq3\_0 norm correction, zero block handling, and full Metal GPU support: pull request to Aaryan Kapoor llama.cpp at https://github.com/Aaryan-Kapoor/llama.cpp/pull/1
+* GGML context sizing for shared rotation tensors: independently fixed upstream in TheTom llama-cpp-turboquant by wxtry in commit 70e45b7e on 2026-03-29, so no separate pull request was needed
+
+A discussion thread tracking community work on TurboQuant in llama.cpp is at https://github.com/ggml-org/llama.cpp/discussions/20969
+
 ## How to Reproduce
 
 ### Round 1 MLX path (Hybrid K5/V4, achieves 100% at 16K)
