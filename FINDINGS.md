@@ -46,7 +46,7 @@ Both changes together, combined with the Hybrid K5/V4 configuration described in
 
 ### Upstream Status
 
-The QJL orthogonal projection and `sqrt(d)` scale factor fixes have been submitted upstream to the TheTom turboquant\_plus reference Python implementation as pull request 93: https://github.com/TheTom/turboquant_plus/pull/93. The pull request also adds a `damping` parameter (default 0.7) on the dequantize path, which was the stable operating point validated on M1 Pro 16K-context runs.
+The QJL orthogonal projection and `sqrt(d)` scale factor fixes were merged into the TheTom turboquant\_plus reference Python implementation on 2026-05-28 as commit 0cb20bca via pull request 93: https://github.com/TheTom/turboquant_plus/pull/93. The merged version adds a `shrinkage` parameter on the dequantize path. Default is 1.0 (classical paper-faithful unbiased estimator). The MMSE-optimal value is `2/np.pi ≈ 0.6366`, derived from the closed forms `E[||x̂||²] = (π/2)·||x||²` and `E[⟨x̂, x⟩] = ||x||²`; this derivation is documented in the dequantize docstring. The PR also adds an orthogonality contract assertion in `__init__` and a corresponding test at `d ∈ {64, 128, 256, 512}` with tolerance `1e-12`.
 
 ---
 
