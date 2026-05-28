@@ -115,7 +115,7 @@ The speed penalty in the MLX path is due to unoptimized Python-level dequantizat
 
 The five fixes documented above have been published back upstream where appropriate:
 
-* QJL orthogonal projection and `sqrt(d)` scale factor: pull request to TheTom turboquant\_plus at https://github.com/TheTom/turboquant_plus/pull/93
+* QJL orthogonal projection and `sqrt(d)` scale factor: merged into TheTom turboquant\_plus main on 2026-05-28 as commit 0cb20bca via pull request https://github.com/TheTom/turboquant_plus/pull/93. The maintainer review surfaced a cleaner closed form (`E[||x̂||²] = (π/2)·||x||²` and MMSE-optimal shrinkage `2/π`) which the merged version documents in the docstring.
 * tq3\_0 norm correction, zero block handling, and full Metal GPU support: pull request to Aaryan Kapoor llama.cpp at https://github.com/Aaryan-Kapoor/llama.cpp/pull/1
 * GGML context sizing for shared rotation tensors: independently fixed upstream in TheTom llama-cpp-turboquant by wxtry in commit 70e45b7e on 2026-03-29, so no separate pull request was needed
 
