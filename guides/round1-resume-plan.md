@@ -126,7 +126,7 @@ Then:
 
 * pivot to documenting a clean issue report against the `optiq` implementation
 * preserve the minimal reproducer
-* optionally evaluate whether the `llama.cpp` fork’s later turbo3 improvements are enough for your use case on a different machine class
+* optionally evaluate whether the `llama.cpp` fork's later turbo3 improvements are enough for your use case on a different machine class
 
 ### If you must use the llama.cpp fork next
 

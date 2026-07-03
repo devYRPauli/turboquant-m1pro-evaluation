@@ -16,21 +16,21 @@ This project successfully implemented and evaluated **TurboQuant**, a breakthrou
 By implementing the TurboQuant algorithm, we moved from theoretical paper claims to a working prototype on Apple Silicon. 
 * **Standard AI:** A 16,000-word conversation consumes ~560MB of high-speed RAM.
 * **TurboQuant AI:** The same conversation consumes only **140MB**.
-* **Impact:** This unlocks "Long Context" (32K–128K tokens) for local research, allowing the lab to process entire genomics papers or long protocol manuals without data ever leaving the local machine.
+* **Impact:** This unlocks "Long Context" (32K-128K tokens) for local research, allowing the lab to process entire genomics papers or long protocol manuals without data ever leaving the local machine.
 
 ### B. Mathematical Validation (Phase 1)
 We ran a rigorous suite of **144 automated tests** to ensure the "compression" doesn't "break" the AI's logic. 
 * **Result:** 100% Pass Rate. The implementation correctly handles the complex "Random Rotation" math required to keep the AI's "thoughts" organized even when compressed.
 
 ### C. Native MLX Integration (Phase 2 & 3)
-We successfully integrated TurboQuant into **MLX** (Apple’s native AI framework). 
+We successfully integrated TurboQuant into **MLX** (Apple's native AI framework). 
 * **Advancement:** We ran a real 3-Billion parameter model (**Qwen2.5-3B**) using this technology. 
 * **Discovery:** We identified that while memory is saved, current software needs specialized "Metal Kernels" to maintain high speeds. We are currently seeing a 2x speed trade-off for the 4x memory gain.
 
 ### D. Hardware "Future-Proofing" (Phase 4)
 We tested a high-performance C++ version of the tool and discovered a critical hardware boundary.
 * **Strategic Insight:** The most advanced versions of TurboQuant require the **Metal Tensor API**, which Apple is introducing in the **M5 and A19 chips**. 
-* **Lab Planning:** This provides a clear roadmap for the lab’s next hardware procurement (e.g., favoring M5 Max units over older M1/M2 stock for high-efficiency AI tasks).
+* **Lab Planning:** This provides a clear roadmap for the lab's next hardware procurement (e.g., favoring M5 Max units over older M1/M2 stock for high-efficiency AI tasks).
 
 ---
 
@@ -48,7 +48,7 @@ We tested a high-performance C++ version of the tool and discovered a critical h
 ## 4. Current Blockers & Next Steps
 
 1.  **Software Maturation:** The current open-source libraries (`mlx-optiq`) have a minor bug in the "Quality Correction" layer. We are working with the community to damp the variance and restore 100% accuracy for 16,000+ token conversations.
-2.  **Speed Optimization:** To eliminate the 2x speed penalty, we need to write custom GPU instructions (Metal Kernels) specifically for the M1 Pro’s architecture.
+2.  **Speed Optimization:** To eliminate the 2x speed penalty, we need to write custom GPU instructions (Metal Kernels) specifically for the M1 Pro's architecture.
 3.  **Lab Deployment:** Once the quality fix is applied, this will be ready for a "Genomics Assistant" prototype that can read multiple 50-page PDFs at once on a standard MacBook.
 
 ---

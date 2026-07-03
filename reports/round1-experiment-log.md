@@ -148,7 +148,7 @@ tests/test_utils.py          ...  9 tests PASSED
 **Key findings**:
 1. Random rotation Gaussianizes heavy-tailed KV vectors (excess kurtosis 51 → -0.13)
 2. 3-bit gets 4.9× compression; 2-bit gets 7.1× compression (single-vector synthetic)
-3. Inner product error is small at 3-4 bit (mean 0.011–0.020)
+3. Inner product error is small at 3-4 bit (mean 0.011-0.020)
 4. Pure Python compress: ~0.10s, decompress: ~0.02s (for 4-layer × 8-head × 512-seq cache)
 5. The 3.5-bit and 2.5-bit modes use `outlier.py` for mixed-precision on outlier channels
 
@@ -450,7 +450,7 @@ For precise Ollama memory measurement, Activity Monitor → Memory → `com.appl
 | MLX baseline needle retrieval |  100% at all context lengths |
 | OOM observed |  Not reached (qwen2.5:3b too small for 16GB OOM) |
 | TurboQuant memory savings |  4.0× KV compression confirmed theoretically |
-| TurboQuant vs baseline speed |  1.3–1.5× slower due to rotation overhead |
+| TurboQuant vs baseline speed |  1.3-1.5× slower due to rotation overhead |
 | Context where TQ really matters | 7B model at 64K+ tokens (extrapolated) |
 
 **Root blocker**: mlx-optiq v0.0.1 quality issue (QJL broken, MSE-only insufficient at long contexts). Fix needed before production use.
@@ -568,7 +568,7 @@ The GGML metadata context holds tensor descriptor structs (no actual data, just 
 /*.mem_size =*/ size_t(2u*(1 + n_stream)*n_layer_kv*ggml_tensor_overhead()),
 ```
 
-This counts `2 * (1 + n_stream) * n_layer_kv` tensor slots, exactly the K and V tensors for each layer. But TurboQuant types additionally create **2 shared tensors** in `llama-kv-cache.cpp` lines 185–192:
+This counts `2 * (1 + n_stream) * n_layer_kv` tensor slots, exactly the K and V tensors for each layer. But TurboQuant types additionally create **2 shared tensors** in `llama-kv-cache.cpp` lines 185-192:
 
 ```cpp
 // Inside the KV cache constructor, after the layer loop:

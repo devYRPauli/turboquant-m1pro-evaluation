@@ -10,9 +10,9 @@ The target machine was an Apple M1 Pro with 16 GB unified memory on macOS Sequoi
 
 The project started from a fresh repository at `/Users/yashrajpandey/Projects/turboquant-m1pro`.
 
-The main implementation target was Aaryan Kapoor’s `llama.cpp` fork on branch `turboquant_tq3_0`.
+The main implementation target was Aaryan Kapoor's `llama.cpp` fork on branch `turboquant_tq3_0`.
 
-The secondary target was TheTom’s `turboquant_plus` Python prototype for comparison and validation.
+The secondary target was TheTom's `turboquant_plus` Python prototype for comparison and validation.
 
 ## 3. What Was Set Up
 
@@ -20,9 +20,9 @@ The secondary target was TheTom’s `turboquant_plus` Python prototype for compa
 2. A README was added describing the project as a TurboQuant evaluation on M1 Pro 16 GB.
 3. An experiment log was created and updated throughout the run with timestamps.
 4. Ollama was checked and `qwen2.5:3b` was confirmed locally.
-5. Aaryan’s fork was cloned, checked out on the TurboQuant branch, and built with Metal enabled.
+5. Aaryan's fork was cloned, checked out on the TurboQuant branch, and built with Metal enabled.
 6. The local Ollama GGUF for `qwen2.5:3b` was linked into the project.
-7. TheTom’s Python prototype was cloned, installed, tested, and benchmarked.
+7. TheTom's Python prototype was cloned, installed, tested, and benchmarked.
 
 ## 4. First Major Result
 
@@ -223,7 +223,7 @@ This matters because the paper and later community reports are not only about co
 
 ## 10. Secondary Prototype Result
 
-TheTom’s `turboquant_plus` prototype was also tested.
+TheTom's `turboquant_plus` prototype was also tested.
 
 The Python test suite result was:
 
