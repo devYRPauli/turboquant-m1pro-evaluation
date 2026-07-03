@@ -45,6 +45,8 @@ benchmarks/                     All benchmark scripts
     stable_long_context_benchmark.py   Stable rerun benchmark
     test_hybrid_needle.py       Hybrid K5/V4 needle test (the script that reached 100%)
     phase3_results.json         Raw Phase 3 result data
+    qjl_ablation.py             QJL ablation probe (projection, scale, damping) from the 2026-07-03 pass
+    hybrid_reproduction.py      Faithful phase3 Hybrid reproduction from the 2026-07-03 pass
 patches/
     key-fixes.md                Prose description of all five concrete code fixes
     round2-norm-correction-ggml-quants.patch      Actual diff: norm correction and zero block fix
@@ -57,6 +59,7 @@ guides/
     round2-guide.md             Round 2 guide (Aaryan fork, fresh start)
     round1-execution-checklist.md  Step-by-step rerun checklist from Round 1 handoff
     round1-resume-plan.md       Resume plan and decision tree from Round 1 handoff
+    reproduction-and-ablation-2026-07-03.md   Follow-up: 2K reproduction and QJL ablation results
 ```
 
 One log file, `logs/phase3-q8_0.log` (137 MB of raw multi-turn llama-cli output), exceeds GitHub's file size limit and is excluded from the published repository via .gitignore. All other logs are included as captured.
@@ -86,7 +89,9 @@ The five fixes are:
 
 5. Norm correction and zero block handling: the tq3\_0 quantizer in Aaryan's fork stored raw RMS as the scale factor, but the correct value is `original_norm / reconstruction_norm` to account for norm change during Lloyd-Max quantization. Near-zero blocks also decoded as structured noise because the guard set scale to 1.0 rather than emitting a true zero block.
 
-In addition to these fixes, the validated MLX configuration applies a damping factor of 0.7 to the QJL correction term (see `benchmarks/test_hybrid_needle.py`). This is close to the MMSE-optimal shrinkage `2/pi` (approximately 0.6366) that was later formalized during upstream review of pull request 93. A reproduction that omits the damping factor is not running the validated configuration. The projection, scale, and damping changes were applied together and were not ablated individually.
+In addition to these fixes, the validated MLX configuration applies a damping factor of 0.7 to the QJL correction term (see `benchmarks/test_hybrid_needle.py`). This is close to the MMSE-optimal shrinkage `2/pi` (approximately 0.6366) that was later formalized during upstream review of pull request 93. A reproduction that omits the damping factor is not running the validated configuration.
+
+A follow-up ablation on 2026-07-03 (`reports/reproduction-and-ablation-2026-07-03.md`) confirmed that the orthogonal projection and the matched `sqrt(d)` scale are one coupled substitution: changing only the scale, or only the matrix while keeping the mismatched scale, still degenerates into word loops. The matched pair is what escapes degeneration, and the 0.7 damping factor stabilizes generation further. Damping applied to the paper-faithful Gaussian configuration has no effect.
 
 ## Results Table
 
@@ -101,7 +106,7 @@ In addition to these fixes, the validated MLX configuration applies a damping fa
 | Aaryan fork tq3\_0 CPU, before norm fix | any | Degenerate (repetitive) |
 | Aaryan fork tq3\_0 after all fixes | 2K, 4K sanity and needle | Correct (both facts retrieved) |
 
-Note on the 2K Hybrid entry: the recorded raw data (`benchmarks/phase3_results.json`) shows a needle score of 0.5 at 2K for the Hybrid configuration: the model retrieved VcMYB4 but wrote "FROSTst7" instead of "FROSTBLOCK-7". The round 1 post-mortem report asserts 100% at 2K in its summary but lists only 4K, 8K, and 16K in its detailed fix section, and no raw output supporting a 100% run at 2K exists in this repository. The table therefore reports the raw data.
+Note on the 2K Hybrid entry: the recorded raw data (`benchmarks/phase3_results.json`) shows a needle score of 0.5 at 2K for the Hybrid configuration: the model retrieved VcMYB4 but wrote "FROSTst7" instead of "FROSTBLOCK-7". This was independently reproduced on 2026-07-03 from a freshly rebuilt environment, exactly (same 0.5 score, same "FROSTst7" corruption), while 4K, 8K, and 16K reproduced at 100%. The round 1 post-mortem report asserts 100% at 2K in its summary but lists only 4K, 8K, and 16K in its detailed fix section, and no raw output supporting a 100% run at 2K exists in this repository. The table therefore reports the reproduced result. See `reports/reproduction-and-ablation-2026-07-03.md`.
 
 ## Speed and Memory Reference
 

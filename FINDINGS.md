@@ -22,7 +22,9 @@ Both stock implementations were faithful to the paper. The pristine mlx-optiq v0
 
 **The fix: a coupled substitution, not two bug fixes.** Replacing the Gaussian matrix with an orthogonal matrix from QR decomposition eliminated the degeneration. Orthogonal matrices preserve norms and inner products exactly, so the projection step introduces no distortion of its own. Because the matrix changed, the scale had to change with it: `sqrt(pi/2) / d` is the correct unbiased scale for a Gaussian matrix, and `sqrt(pi/2) / sqrt(d)` is the correct scale for an orthogonal one. Keeping the Gaussian scale with the orthogonal matrix would make the correction approximately 11x too small at d=128 (`sqrt(128) = 11.31`). Earlier versions of this write-up, and the commit message merged upstream, described the scale itself as an 11x bug in the stock code; that framing is wrong, because in the stock code the `1/d` scale was paired with the Gaussian matrix it belongs to. In expectation the stock correction term had the same magnitude as the fixed one. The difference the fix makes is in variance, not bias.
 
-The validated configuration additionally applies a damping factor of 0.7 to the QJL correction term. This is close to the MMSE-optimal shrinkage `2/pi` (approximately 0.6366): the unbiased estimator inflates reconstruction energy (`E[||x_hat||^2] = (pi/2) * ||x||^2`), and shrinking it toward zero trades a small bias for a lower mean squared error. The projection, scale, and damping changes were applied together and were not ablated individually, so their individual contributions to the 0% to 100% result are not isolated in this data.
+The validated configuration additionally applies a damping factor of 0.7 to the QJL correction term. This is close to the MMSE-optimal shrinkage `2/pi` (approximately 0.6366): the unbiased estimator inflates reconstruction energy (`E[||x_hat||^2] = (pi/2) * ||x||^2`), and shrinking it toward zero trades a small bias for a lower mean squared error.
+
+A follow-up ablation on 2026-07-03 (`reports/reproduction-and-ablation-2026-07-03.md`) isolated the three changes. The paper-faithful Gaussian projection with the 1/d scale degenerates into word loops. Changing only the scale, or only the projection matrix while keeping the mismatched scale, still degenerates: the orthogonal projection and the matched `sqrt(d)` scale must be applied together, confirming they are one coupled substitution rather than two independent fixes. The matched pair escapes degeneration into semi-coherent generation, and the 0.7 damping factor stabilizes it into coherent generation. Damping applied to the paper-faithful Gaussian configuration has no effect.
 
 ### Why Every Implementation Dropped QJL
 
@@ -42,7 +44,7 @@ The fix as implemented in `benchmarks/test_hybrid_needle.py`:
 
 3. Multiply the QJL correction term by a damping factor of 0.7 (approximately the MMSE-optimal shrinkage `2/pi`).
 
-These changes together, combined with the Hybrid K5/V4 configuration described in Finding 2, moved needle retrieval from 0% to 100% at 4K, 8K, and 16K tokens. At 2K the recorded run scored 50% (see the note under the results table in the README): the model retrieved one of the two needle facts.
+These changes together, combined with the Hybrid K5/V4 configuration described in Finding 2, moved needle retrieval from 0% to 100% at 4K, 8K, and 16K tokens. At 2K the recorded run scored 50%: the model retrieved the locus VcMYB4 but corrupted the allele name FROSTBLOCK-7 into "FROSTst7". This 2K result was independently reproduced on 2026-07-03 from a freshly rebuilt environment (`reports/reproduction-and-ablation-2026-07-03.md`), confirming it is deterministic and not a logging artifact.
 
 ### Upstream Status
 
@@ -79,7 +81,7 @@ The fix is to allocate bits asymmetrically. Assign 5 bits to keys (4-bit MSE bas
 
 The average bit rate is 4.5 bits per cache element, which is slightly above the 4-bit symmetric case. The memory savings compared to FP16 are still approximately 3.6x.
 
-This configuration achieved 100% needle retrieval at 4K, 8K, and 16K tokens, where the stock 4-bit symmetric configuration achieved 0% at all lengths. At 2K the recorded run scored 50% (one of the two needle facts retrieved); see the note under the results table in the README.
+This configuration achieved 100% needle retrieval at 4K, 8K, and 16K tokens, where the stock 4-bit symmetric configuration achieved 0% at all lengths. At 2K the recorded run scored 50% (one of the two needle facts retrieved), reproduced exactly on 2026-07-03; see the note under the results table in the README.
 
 The asymmetry insight is consistent with the broader literature on attention quantization. Keys encode positional and semantic identity for retrieval. Values encode content. These have different precision requirements, and hardware implementations that ignore this distinction leave accuracy on the table.
 
