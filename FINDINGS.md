@@ -4,7 +4,7 @@ This document provides a detailed technical writeup of the three main discoverie
 
 ---
 
-## Finding 1: The QJL Stage Was Broken in Every Implementation Tested
+## Finding 1: The Paper's QJL Construction Fails in Practice at Head Dimension 128; an Orthogonal Variant Fixes It
 
 ### What QJL Is Supposed to Do
 
@@ -12,27 +12,25 @@ The TurboQuant paper's two-stage design works as follows. Stage 1 (PolarQuant) a
 
 The key mathematical claim is that for a random projection matrix S, the estimator `scale * (sign(S * residual)) @ S` approximates the residual vector with zero bias. This is derived from Johnson-Lindenstrauss lemma results. When computing attention scores (query dot key), you can add this correction to get a better estimate of the true inner product.
 
-The scale factor for an orthogonal projection in d dimensions is `sqrt(pi/2) / sqrt(d)`.
+The paper (Definition 1 and Algorithm 2) defines S as a d x d matrix with i.i.d. standard Gaussian entries and the dequantization scale as `sqrt(pi/2) / d`. That pair is self-consistent and unbiased: Gaussian rows have norm near `sqrt(d)`, so the projection output is about `sqrt(d)` larger than it would be with orthonormal rows, and the `1/d` scale absorbs exactly that factor. For an orthogonal projection matrix (orthonormal rows), the matching unbiased scale is `sqrt(pi/2) / sqrt(d)`. The two conventions differ by `sqrt(d)` and are interchangeable in expectation; what differs between them is variance.
 
 ### What the Implementations Actually Did
 
-The mlx-optiq v0.0.1 package used a random Gaussian matrix for S rather than an orthogonal matrix. It also used `sqrt(pi/2) / d` as the scale factor rather than `sqrt(pi/2) / sqrt(d)`.
+Both stock implementations were faithful to the paper. The pristine mlx-optiq v0.0.1 wheel from PyPI and the pre-fix state of TheTom turboquant\_plus (visible in the before side of pull request 93) both used a random Gaussian matrix for S with the scale `sqrt(pi/2) / d`, exactly as the paper specifies. Neither contained a transcription error in the QJL math. The installed package inside the round 1 virtual environment differs from the PyPI wheel because the fixes described below were applied to it in place during the project.
 
-These are two separate errors with compounding effects.
+**What went wrong in practice.** The paper-faithful construction is unbiased, but its variance proved fatal on real LLM KV vectors at head dimension 128. Every token that passes through the quantizer accumulates a small error in the reconstructed attention key. Over thousands of tokens in a long context, these errors compound. The attention score distribution distorts progressively, eventually causing the softmax to collapse toward a single token or distribute nonsensically. The observed symptom was immediate word-loop degeneration the moment QJL was enabled at any context length, even 36 tokens.
 
-**Error 1: Gaussian vs. orthogonal projection matrix.** A random Gaussian matrix S does provide an unbiased estimator in theory. The problem is variance. For each dimension of the reconstructed residual, the variance is of order `||r||^2 / d`. For real LLM KV vectors with head dimension 128, this variance is large relative to the signal. Every token that passes through the quantizer accumulates a small error in the reconstructed attention key. Over thousands of tokens in a long context, these errors compound. The attention score distribution distorts progressively, eventually causing the softmax to collapse toward a single token or distribute nonsensically. The observed symptom was immediate word-loop degeneration the moment QJL was enabled at any context length, even 36 tokens.
+**The fix: a coupled substitution, not two bug fixes.** Replacing the Gaussian matrix with an orthogonal matrix from QR decomposition eliminated the degeneration. Orthogonal matrices preserve norms and inner products exactly, so the projection step introduces no distortion of its own. Because the matrix changed, the scale had to change with it: `sqrt(pi/2) / d` is the correct unbiased scale for a Gaussian matrix, and `sqrt(pi/2) / sqrt(d)` is the correct scale for an orthogonal one. Keeping the Gaussian scale with the orthogonal matrix would make the correction approximately 11x too small at d=128 (`sqrt(128) = 11.31`). Earlier versions of this write-up, and the commit message merged upstream, described the scale itself as an 11x bug in the stock code; that framing is wrong, because in the stock code the `1/d` scale was paired with the Gaussian matrix it belongs to. In expectation the stock correction term had the same magnitude as the fixed one. The difference the fix makes is in variance, not bias.
 
-Replacing the Gaussian matrix with an orthogonal matrix from QR decomposition eliminated the variance problem. Orthogonal matrices by definition preserve norms and inner products exactly, so the projection step introduces no distortion of its own. The residual reconstruction error then comes only from the 1-bit quantization of the sign, which is bounded and well-characterized.
-
-**Error 2: Scale factor off by sqrt(d).** At d=128, the incorrect scale `sqrt(pi/2) / d` is approximately 11 times smaller than the correct scale `sqrt(pi/2) / sqrt(d)`. This meant that even when QJL was nominally enabled, the correction term was effectively zero relative to the MSE stage output. The QJL stage was doing nothing. Fixing this allowed the 1-bit correction to actually reduce quantization MSE by the theoretical 64 percent.
+The validated configuration additionally applies a damping factor of 0.7 to the QJL correction term. This is close to the MMSE-optimal shrinkage `2/pi` (approximately 0.6366): the unbiased estimator inflates reconstruction energy (`E[||x_hat||^2] = (pi/2) * ||x||^2`), and shrinking it toward zero trades a small bias for a lower mean squared error. The projection, scale, and damping changes were applied together and were not ablated individually, so their individual contributions to the 0% to 100% result are not isolated in this data.
 
 ### Why Every Implementation Dropped QJL
 
 Both primary implementations tested (mlx-optiq and TheTom turboquant\_plus) independently arrived at the conclusion that MSE-only quantization worked better in practice than the two-stage design. The experiment log notes that both Aaryan Kapoor and TheTom independently dropped QJL in favor of MSE-only with all bits going to Lloyd-Max centroids.
 
-This is consistent with the bugs found. If the QJL projection matrix introduces high variance and the scale factor is 11 times too small, then enabling QJL makes output worse, not better. The natural engineering response is to disable the stage that makes things worse. But the underlying reason it makes things worse is a pair of implementation errors, not a problem with the algorithm design.
+This is consistent with the finding above. A paper-faithful Gaussian QJL really does make output worse at head dimension 128, so the natural engineering response was to disable the stage. The conclusion of this evaluation is that the two-stage design itself is sound: it works once the projection is orthogonal, the scale matches, and the correction is damped.
 
-The paper's QJL stage, implemented correctly with orthogonal projections and the right scale factor, does work. The post-mortem report confirms that with both fixes applied, the QJL correction reduces MSE from 0.00023 to 0.000129 and improves cosine similarity to 99.7 percent on real model activations. These numbers are consistent with the paper's claims.
+The post-mortem report records that with the fixes applied, the QJL correction reduces MSE from 0.00023 to 0.000129 (a 44 percent reduction) and improves cosine similarity to 99.7 percent on real model activations. The 44 percent figure matches the theoretical `(pi/2 - 1)`, approximately 43 percent, for the undamped estimator. The theoretical maximum with MMSE-optimal shrinkage `2/pi` is `1 - 2/pi`, approximately 64 percent.
 
 ### What the Fix Required
 
@@ -40,13 +38,15 @@ The fix as implemented in `benchmarks/test_hybrid_needle.py`:
 
 1. Generate the QJL projection matrix S using QR decomposition of a Gaussian random draw, then enforce a consistent sign convention by multiplying columns by the signs of the diagonal of R.
 
-2. Change the dequantization scale from `math.sqrt(math.pi / 2.0) / self.d` to `math.sqrt(math.pi / 2.0) / math.sqrt(self.d)`.
+2. Change the dequantization scale from `math.sqrt(math.pi / 2.0) / self.d` to the matching `math.sqrt(math.pi / 2.0) / math.sqrt(self.d)`.
 
-Both changes together, combined with the Hybrid K5/V4 configuration described in Finding 2, moved needle retrieval from 0% to 100% at every tested context length (2K, 4K, 8K, 16K).
+3. Multiply the QJL correction term by a damping factor of 0.7 (approximately the MMSE-optimal shrinkage `2/pi`).
+
+These changes together, combined with the Hybrid K5/V4 configuration described in Finding 2, moved needle retrieval from 0% to 100% at 4K, 8K, and 16K tokens. At 2K the recorded run scored 50% (see the note under the results table in the README): the model retrieved one of the two needle facts.
 
 ### Upstream Status
 
-The QJL orthogonal projection and `sqrt(d)` scale factor fixes were merged into the TheTom turboquant\_plus reference Python implementation on 2026-05-28 as commit 0cb20bca via pull request 93: https://github.com/TheTom/turboquant_plus/pull/93. The merged version adds a `shrinkage` parameter on the dequantize path. Default is 1.0 (classical paper-faithful unbiased estimator). The MMSE-optimal value is `2/np.pi ≈ 0.6366`, derived from the closed forms `E[||x̂||²] = (π/2)·||x||²` and `E[⟨x̂, x⟩] = ||x||²`; this derivation is documented in the dequantize docstring. The PR also adds an orthogonality contract assertion in `__init__` and a corresponding test at `d ∈ {64, 128, 256, 512}` with tolerance `1e-12`.
+The QJL orthogonal projection and `sqrt(d)` scale factor changes were merged into the TheTom turboquant\_plus reference Python implementation on 2026-05-28 as commit 0cb20bca via pull request 93: https://github.com/TheTom/turboquant_plus/pull/93. The merged version adds a `shrinkage` parameter on the dequantize path. Default is 1.0 (classical unbiased estimator). The MMSE-optimal value is `2/np.pi`, approximately 0.6366, derived from the closed forms `E[||x_hat||^2] = (pi/2) * ||x||^2` and `E[<x_hat, x>] = ||x||^2`; this derivation is documented in the dequantize docstring. The PR also adds an orthogonality contract assertion in `__init__` and a corresponding test at d in {64, 128, 256, 512} with tolerance `1e-12`. One caveat: the merged commit message describes the scale change as fixing a formula that was "11x too small"; as explained above, that factor only arises relative to the orthogonal matrix introduced in the same change, since the stock Gaussian projection with the `1/d` scale was the paper's own unbiased construction.
 
 ---
 
@@ -54,7 +54,7 @@ The QJL orthogonal projection and `sqrt(d)` scale factor fixes were merged into 
 
 ### The Asymmetry
 
-Even with correct QJL math (orthogonal projection and correct scale factor), a symmetric 4-bit allocation failed at 2K context. Assigning 4 bits to both K and V, with K using 4-bit MSE plus 1-bit QJL and V using the same, was not enough for reliable fact retrieval.
+Even with the working QJL variant (orthogonal projection, matched scale factor, damping), a symmetric 4-bit allocation failed at 2K context. Assigning 4 bits to both K and V, with K using 4-bit MSE plus 1-bit QJL and V using the same, was not enough for reliable fact retrieval.
 
 The diagnostic evidence for this asymmetry appeared early and clearly. In both the CPU-only path and the Metal path in Round 2:
 
@@ -79,7 +79,7 @@ The fix is to allocate bits asymmetrically. Assign 5 bits to keys (4-bit MSE bas
 
 The average bit rate is 4.5 bits per cache element, which is slightly above the 4-bit symmetric case. The memory savings compared to FP16 are still approximately 3.6x.
 
-This configuration achieved 100% needle retrieval at 2K, 4K, 8K, and 16K tokens, where the stock 4-bit symmetric configuration achieved 0% at all lengths.
+This configuration achieved 100% needle retrieval at 4K, 8K, and 16K tokens, where the stock 4-bit symmetric configuration achieved 0% at all lengths. At 2K the recorded run scored 50% (one of the two needle facts retrieved); see the note under the results table in the README.
 
 The asymmetry insight is consistent with the broader literature on attention quantization. Keys encode positional and semantic identity for retrieval. Values encode content. These have different precision requirements, and hardware implementations that ignore this distinction leave accuracy on the table.
 
@@ -157,4 +157,4 @@ Between Round 1 and Round 2, TheTom's Python prototype updated substantially. Ro
 
 ### Memory Savings Are Real
 
-The theoretical 4x compression ratio was confirmed at all tested context lengths. At 16K tokens, FP16 KV cache uses 562 MB and 4-bit TurboQuant uses 140 MB. For qwen2.5:3b on 16GB hardware the savings are not operationally critical because the total memory budget is comfortable even without compression. The value proposition grows with larger models at longer contexts. A 7B model at 64K context would use approximately 9.2 GB for the KV cache in FP16 versus approximately 2.3 GB with 4-bit TurboQuant, which is the difference between OOM risk and a comfortable fit on 16GB hardware.
+The theoretical 4x compression ratio was confirmed at all tested context lengths. At 16K tokens, FP16 KV cache uses 562 MB and 4-bit TurboQuant uses 140 MB. For qwen2.5:3b on 16GB hardware the savings are not operationally critical because the total memory budget is comfortable even without compression. The value proposition grows with larger models at longer contexts. A 7B model at 128K context would use approximately 9.2 GB for the KV cache in FP16 versus approximately 2.3 GB with 4-bit TurboQuant, which is the difference between OOM risk and a comfortable fit on 16GB hardware (at 64K the corresponding figures are approximately 4.6 GB versus 1.2 GB).

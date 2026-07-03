@@ -12,9 +12,9 @@ The algorithm works in two stages:
 
 2. QJL (Quantized Johnson-Lindenstrauss): A 1-bit sign projection of the quantization residual provides an unbiased inner-product correction. This eliminates the systematic bias that accumulates in the attention scores when using compressed keys.
 
-The paper claims 3.5-bit quantization produces zero accuracy loss, with a minimum 6x reduction in KV memory, requiring no training or calibration.
+The paper claims 3.5-bit quantization produces quality neutral results while compressing the KV cache by at least 4.5x, requiring no training or calibration.
 
-The paper authors are Amir Zandieh, Majid Daliri, Majid Hadian, and Vahab Mirrokni (Google Research). The paper reference is: TurboQuant: Online Vector Quantization for KV Cache Compression, arXiv 2504.19874.
+The paper authors are Amir Zandieh (Google Research), Majid Daliri (New York University), Majid Hadian (Google DeepMind), and Vahab Mirrokni (Google Research). The paper reference is: TurboQuant: Online Vector Quantization with Near-optimal Distortion Rate, arXiv 2504.19874.
 
 ## What This Repository Contains
 
@@ -36,7 +36,7 @@ logs/                           All llama-cli debug and test run logs, needle pr
     needle-4k-prompt.txt        Exact 4K context needle prompt used in Round 2 tests
     needle-8k-prompt.txt        Exact 8K context needle prompt used in Round 2 tests
     needle-template.txt         Needle prompt template
-    niah-results/               NIAH result files from turboquant_plus runs during Round 2
+    niah-results/               NIAH result files from upstream turboquant_plus M5 Max reference runs (Qwen3.5-35B-A3B), not local M1 Pro results
 benchmarks/                     All benchmark scripts
     build_prompt.py             Prompt generator with embedded needle
     phase2_inference_compare.py MLX inference comparison script
@@ -51,7 +51,7 @@ patches/
     round2-metal-tq3-kernels.patch                Actual diff: Metal tq3_0 kernel additions
     round2-metal-device-allowlist.patch           Actual diff: Metal device allowlist for tq3_0
     round1-ggml-context-sizing-llama-kv-cache.patch  Actual diff: GGML context sizing fix
-    round1-metal-modifications.patch              Actual diff: Round 1 Metal shader changes
+    round1-metal-modifications.patch              Vestigial whitespace-only diff (Round 1 kernel work was reverted)
 guides/
     implementation-guide.md     Round 1 full implementation guide
     round2-guide.md             Round 2 guide (Aaryan fork, fresh start)
@@ -59,10 +59,12 @@ guides/
     round1-resume-plan.md       Resume plan and decision tree from Round 1 handoff
 ```
 
+One log file, `logs/phase3-q8_0.log` (137 MB of raw multi-turn llama-cli output), exceeds GitHub's file size limit and is excluded from the published repository via .gitignore. All other logs are included as captured.
+
 ## Hardware and Environment
 
 * Machine: MacBook Pro, Apple M1 Pro chip, 16GB unified memory, 512GB SSD
-* OS: macOS Sequoia (version 26.3.1 and 26.4 across the two rounds)
+* OS: macOS 26.3.1 and 26.4 across the two rounds (the version 26 line is macOS Tahoe; the source logs label it Sequoia, which is the version 15 line, and that label is preserved in the copied reports)
 * Python: 3.12.13 (via Homebrew)
 * Model tested: Qwen2.5-3B-Instruct (Q4\_K\_M GGUF via Ollama, and 4-bit MLX via Hugging Face)
 * Round 1 implementations: mlx-optiq v0.0.1 (MLX inference), TheTom turboquant\_plus Python prototype, TheTom llama-cpp-turboquant fork
@@ -74,15 +76,17 @@ Stock TurboQuant implementations achieved 0% needle retrieval at all tested cont
 
 The five fixes are:
 
-1. QJL orthogonal projection: the QJL stage used a Gaussian random matrix, which introduces too-high variance for head dimension 128. Replacing it with an orthogonal matrix from QR decomposition eliminated the variance problem.
+1. QJL orthogonal projection: the paper defines the QJL projection as a random Gaussian matrix (Definition 1 in the paper), and the stock implementations followed it faithfully. That construction is unbiased, but empirically it destroyed generation at head dimension 128 (immediate word-loop degeneration). Replacing the Gaussian matrix with a random orthogonal matrix from QR decomposition, a variance-reducing modification of the paper's design, eliminated the degeneration.
 
-2. QJL dequantization scale factor: the scale was `sqrt(pi/2) / d` but the correct formula is `sqrt(pi/2) / sqrt(d)`. At d=128 this is an 11x error, effectively disabling the QJL correction.
+2. QJL dequantization scale factor: the scale must match the projection matrix. The paper's `sqrt(pi/2) / d` is correct for a Gaussian matrix, whose rows have norm near `sqrt(d)`. Once the matrix is orthogonal (change 1), the matching scale becomes `sqrt(pi/2) / sqrt(d)`; keeping the Gaussian scale with an orthogonal matrix would make the correction about 11x too small at d=128. The two changes are one coupled substitution, not two independent bug fixes.
 
 3. Hybrid K5/V4 configuration: even with correct QJL math, keys are more sensitive to quantization noise than values because attention scores depend on precise key-query inner products. Assigning 5 bits to keys (4-bit MSE plus 1-bit QJL) and 4 bits to values (4-bit MSE only) provided the necessary precision.
 
 4. GGML context sizing bug: the TheTom llama-cpp-turboquant fork crashed on initialization due to a metadata context allocation formula that did not count the two shared rotation matrix tensors. Adding two extra `ggml_tensor_overhead()` slots fixed the crash. This was diagnosed as a software bug, not a hardware incompatibility.
 
 5. Norm correction and zero block handling: the tq3\_0 quantizer in Aaryan's fork stored raw RMS as the scale factor, but the correct value is `original_norm / reconstruction_norm` to account for norm change during Lloyd-Max quantization. Near-zero blocks also decoded as structured noise because the guard set scale to 1.0 rather than emitting a true zero block.
+
+In addition to these fixes, the validated MLX configuration applies a damping factor of 0.7 to the QJL correction term (see `benchmarks/test_hybrid_needle.py`). This is close to the MMSE-optimal shrinkage `2/pi` (approximately 0.6366) that was later formalized during upstream review of pull request 93. A reproduction that omits the damping factor is not running the validated configuration. The projection, scale, and damping changes were applied together and were not ablated individually.
 
 ## Results Table
 
@@ -91,10 +95,13 @@ The five fixes are:
 | Ollama baseline (q8\_0) | 2K, 4K, 8K, 16K | 100% all lengths |
 | MLX baseline (FP16 KV) | 2K, 4K, 8K, 16K | 100% all lengths |
 | MLX TurboQuant MSE-only 4-bit (stock) | 2K, 4K, 8K, 16K | 0% all lengths |
-| MLX TurboQuant with QJL (stock, broken scale) | any | Degenerate (word loops) |
-| MLX Hybrid K5/V4 (fixed QJL, orthogonal, correct scale) | 2K, 4K, 8K, 16K | 100% all lengths |
+| MLX TurboQuant with QJL (stock, paper-faithful Gaussian) | any | Degenerate (word loops) |
+| MLX Hybrid K5/V4 (orthogonal QJL, matched scale, 0.7 damping) | 4K, 8K, 16K | 100% |
+| MLX Hybrid K5/V4 (orthogonal QJL, matched scale, 0.7 damping) | 2K | 50% in the recorded run (see note) |
 | Aaryan fork tq3\_0 CPU, before norm fix | any | Degenerate (repetitive) |
 | Aaryan fork tq3\_0 after all fixes | 2K, 4K sanity and needle | Correct (both facts retrieved) |
+
+Note on the 2K Hybrid entry: the recorded raw data (`benchmarks/phase3_results.json`) shows a needle score of 0.5 at 2K for the Hybrid configuration: the model retrieved VcMYB4 but wrote "FROSTst7" instead of "FROSTBLOCK-7". The round 1 post-mortem report asserts 100% at 2K in its summary but lists only 4K, 8K, and 16K in its detailed fix section, and no raw output supporting a 100% run at 2K exists in this repository. The table therefore reports the raw data.
 
 ## Speed and Memory Reference
 
@@ -115,7 +122,7 @@ The speed penalty in the MLX path is due to unoptimized Python-level dequantizat
 
 The five fixes documented above have been published back upstream where appropriate:
 
-* QJL orthogonal projection and `sqrt(d)` scale factor: merged into TheTom turboquant\_plus main on 2026-05-28 as commit 0cb20bca via pull request https://github.com/TheTom/turboquant_plus/pull/93. The maintainer review surfaced a cleaner closed form (`E[||x̂||²] = (π/2)·||x||²` and MMSE-optimal shrinkage `2/π`) which the merged version documents in the docstring.
+* QJL orthogonal projection and `sqrt(d)` scale factor: merged into TheTom turboquant\_plus main on 2026-05-28 as commit 0cb20bca via pull request https://github.com/TheTom/turboquant_plus/pull/93. The maintainer review surfaced a cleaner closed form (`E[||x_hat||^2] = (pi/2) * ||x||^2` and MMSE-optimal shrinkage `2/pi`) which the merged version documents in the docstring. Note that the merged commit message describes the scale change as fixing an 11x error; as explained under the five fixes above, that factor only arises relative to the orthogonal matrix introduced in the same change, since the stock Gaussian projection with the `sqrt(pi/2)/d` scale was the paper's own unbiased construction.
 * tq3\_0 norm correction, zero block handling, and full Metal GPU support: pull request to Aaryan Kapoor llama.cpp at https://github.com/Aaryan-Kapoor/llama.cpp/pull/1
 * GGML context sizing for shared rotation tensors: independently fixed upstream in TheTom llama-cpp-turboquant by wxtry in commit 70e45b7e on 2026-03-29, so no separate pull request was needed
 
@@ -127,12 +134,13 @@ A discussion thread tracking community work on TurboQuant in llama.cpp is at htt
 
 See `guides/implementation-guide.md` for full environment setup. The key script is `benchmarks/test_hybrid_needle.py`. It requires mlx-optiq, mlx-lm, and the mlx-community/Qwen2.5-3B-Instruct-4bit model.
 
-The three changes required in the installed optiq package are:
+The four changes required in the installed optiq package are:
 1. Replace the Gaussian QJL projection matrix with an orthogonal matrix (QR decomposition)
-2. Change the dequantization scale from `sqrt(pi/2) / d` to `sqrt(pi/2) / sqrt(d)`
-3. Use Hybrid K5/V4 bit allocation (K uses 4-bit MSE plus 1-bit QJL, V uses 4-bit MSE only)
+2. Change the dequantization scale from `sqrt(pi/2) / d` to the matching `sqrt(pi/2) / sqrt(d)`
+3. Apply a damping factor of 0.7 to the QJL correction term (approximately the MMSE-optimal shrinkage `2/pi`)
+4. Use Hybrid K5/V4 bit allocation (K uses 4-bit MSE plus 1-bit QJL, V uses 4-bit MSE only)
 
-The test\_hybrid\_needle.py script applies all three changes inline as local class overrides.
+The test\_hybrid\_needle.py script applies all four changes inline as local class overrides.
 
 ### Round 2 llama.cpp path (Aaryan fork, achieves correct output and 2K/4K needle)
 
@@ -149,4 +157,4 @@ Full details of each code change are in `patches/key-fixes.md`.
 
 ## Paper Reference
 
-Zandieh, A., Daliri, M., Hadian, M., and Mirrokni, V. TurboQuant: Online Vector Quantization for KV Cache Compression. arXiv 2504.19874. Presented at ICLR 2026.
+Zandieh, A., Daliri, M., Hadian, M., and Mirrokni, V. TurboQuant: Online Vector Quantization with Near-optimal Distortion Rate. arXiv 2504.19874. Presented at ICLR 2026 (poster).
