@@ -163,3 +163,7 @@ Full details of each code change are in `patches/key-fixes.md`.
 ## Paper Reference
 
 Zandieh, A., Daliri, M., Hadian, M., and Mirrokni, V. TurboQuant: Online Vector Quantization with Near-optimal Distortion Rate. arXiv 2504.19874. Presented at ICLR 2026 (poster).
+
+## License
+
+MIT.
