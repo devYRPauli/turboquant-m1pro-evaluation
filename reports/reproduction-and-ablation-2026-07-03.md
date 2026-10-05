@@ -72,6 +72,14 @@ generation degenerates. Script: `benchmarks/qjl_ablation.py`. Raw output:
 | orthogonal | sqrt(pi/2)/sqrt(d) | 0.7 | Coherent text |
 | gaussian (paper) | sqrt(pi/2)/d (paper) | 0.7 | Word-loop degeneration |
 
+Note added 2026-10-05: rows 4 and 5 overstate the raw output in
+`logs/qjl-ablation-2026-07-03.json`. Row 4 is broken text that contains the word
+"locus". It does not show where the model attends. Row 5 repeats the filler
+sentence with stutters ("a a a complex complex"). It is cleaner than row 4, but it
+is not coherent text. Points 3 and 4 below and the closing paragraph keep the
+original wording. With one greedy run per row, the ablation is consistent with
+the coupled substitution, but it does not confirm it.
+
 Reading the table:
 
 1. The paper-faithful configuration (row 1, Gaussian projection with the 1/d
