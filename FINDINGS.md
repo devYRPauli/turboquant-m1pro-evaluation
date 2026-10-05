@@ -16,7 +16,7 @@ The paper (Definition 1 and Algorithm 2) defines S as a d x d matrix with i.i.d.
 
 ### What the Implementations Actually Did
 
-Both stock implementations were faithful to the paper. The pristine mlx-optiq v0.0.1 wheel from PyPI and the pre-fix state of TheTom turboquant\_plus (visible in the before side of pull request 93) both used a random Gaussian matrix for S with the scale `sqrt(pi/2) / d`, exactly as the paper specifies. Neither contained a transcription error in the QJL math. The installed package inside the round 1 virtual environment differs from the PyPI wheel because the fixes described below were applied to it in place during the project.
+Both stock implementations were faithful to the paper. The pristine mlx-optiq v0.0.1 wheel from PyPI and the pre-fix state of TheTom turboquant\_plus (visible in the before side of pull request 93) both used a random Gaussian matrix for S with the scale `sqrt(pi/2) / d`, exactly as the paper specifies. Neither contained a transcription error in the QJL math. The installed package inside the round 1 virtual environment differs from the PyPI wheel because the fixes described below were applied to it in place during the project. Those two edited files (`optiq/core/turbo_quant.py` and `optiq/core/turbo_kv_cache.py`) were used again for the 2026-07-03 reproduction and were not kept after it. `benchmarks/tq_patched.py` rebuilds the same changes as subclasses of the stock 0.0.1 package, so the Hybrid configuration runs from a clean install of `requirements.txt`.
 
 **What went wrong in practice.** The paper-faithful construction is unbiased, but its variance proved fatal on real LLM KV vectors at head dimension 128. Every token that passes through the quantizer accumulates a small error in the reconstructed attention key. Over thousands of tokens in a long context, these errors compound. The attention score distribution distorts progressively, eventually causing the softmax to collapse toward a single token or distribute nonsensically. The observed symptom was immediate word-loop degeneration the moment QJL was enabled at any context length, even 36 tokens.
 
@@ -24,7 +24,9 @@ Both stock implementations were faithful to the paper. The pristine mlx-optiq v0
 
 The validated configuration additionally applies a damping factor of 0.7 to the QJL correction term. This is close to the MMSE-optimal shrinkage `2/pi` (approximately 0.6366): the unbiased estimator inflates reconstruction energy (`E[||x_hat||^2] = (pi/2) * ||x||^2`), and shrinking it toward zero trades a small bias for a lower mean squared error.
 
-A follow-up ablation on 2026-07-03 (`reports/reproduction-and-ablation-2026-07-03.md`) isolated the three changes. The paper-faithful Gaussian projection with the 1/d scale degenerates into word loops. Changing only the scale, or only the projection matrix while keeping the mismatched scale, still degenerates: the orthogonal projection and the matched `sqrt(d)` scale must be applied together, confirming they are one coupled substitution rather than two independent fixes. The matched pair escapes degeneration into semi-coherent generation, and the 0.7 damping factor stabilizes it into coherent generation. Damping applied to the paper-faithful Gaussian configuration has no effect.
+A follow-up ablation on 2026-07-03 (`reports/reproduction-and-ablation-2026-07-03.md`, raw output `logs/qjl-ablation-2026-07-03.json`) isolated the three changes. The paper-faithful Gaussian projection with the 1/d scale degenerates into word loops. Changing only the scale, or only the projection matrix while keeping the mismatched scale, still degenerates. This is consistent with the orthogonal projection and the matched `sqrt(d)` scale being one coupled substitution rather than two independent fixes. The matched pair escapes word loops into semi-coherent repetition of the filler text, and the 0.7 damping factor makes that text slightly cleaner. Damping applied to the paper-faithful Gaussian configuration has no visible effect.
+
+The ablation has limits. It makes one greedy run per configuration on a synthetic 2K prompt with no chat template, so no configuration answers the question and the evidence is qualitative. Its keys use 4 bits (3-bit MSE plus 1-bit QJL), not the 5 bits of the Hybrid configuration. The October rerun (`logs/qjl-ablation-2026-10-05.json`) shows the same ordering, but no response text matches the July run (see "Reproduction on 2026-10-05" below).
 
 ### Why Every Implementation Dropped QJL
 
@@ -32,19 +34,21 @@ Both primary implementations tested (mlx-optiq and TheTom turboquant\_plus) inde
 
 This is consistent with the finding above. A paper-faithful Gaussian QJL really does make output worse at head dimension 128, so the natural engineering response was to disable the stage. The conclusion of this evaluation is that the two-stage design itself is sound: it works once the projection is orthogonal, the scale matches, and the correction is damped.
 
-The post-mortem report records that with the fixes applied, the QJL correction reduces MSE from 0.00023 to 0.000129 (a 44 percent reduction) and improves cosine similarity to 99.7 percent on real model activations. The 44 percent figure matches the theoretical `(pi/2 - 1)`, approximately 43 percent, for the undamped estimator. The theoretical maximum with MMSE-optimal shrinkage `2/pi` is `1 - 2/pi`, approximately 64 percent.
+The post-mortem report records that with the fixes applied, the QJL correction reduces MSE from 0.00023 to 0.000129 (a 44 percent reduction) and improves cosine similarity to 99.7 percent on real model activations. The 44 percent figure matches the theoretical `(pi/2 - 1)`, approximately 43 percent, for the undamped estimator. The theoretical maximum with MMSE-optimal shrinkage `2/pi` is `1 - 2/pi`, approximately 64 percent. The raw output behind the post-mortem MSE and cosine figures was not kept, so they are not reproducible from this repository.
 
 ### What the Fix Required
 
-The fix as implemented in `benchmarks/test_hybrid_needle.py`:
+The fix as rebuilt in `benchmarks/tq_patched.py`:
 
-1. Generate the QJL projection matrix S using QR decomposition of a Gaussian random draw, then enforce a consistent sign convention by multiplying columns by the signs of the diagonal of R.
+1. Generate the QJL projection matrix S using QR decomposition of a Gaussian random draw, then enforce a consistent sign convention by multiplying columns by the signs of the diagonal of R. This is the construction the package already uses for its rotation matrix.
 
 2. Change the dequantization scale from `math.sqrt(math.pi / 2.0) / self.d` to the matching `math.sqrt(math.pi / 2.0) / math.sqrt(self.d)`.
 
 3. Multiply the QJL correction term by a damping factor of 0.7 (approximately the MMSE-optimal shrinkage `2/pi`).
 
-These changes together, combined with the Hybrid K5/V4 configuration described in Finding 2, moved needle retrieval from 0% to 100% at 4K, 8K, and 16K tokens. At 2K the recorded run scored 50%: the model retrieved the locus VcMYB4 but corrupted the allele name FROSTBLOCK-7 into "FROSTst7". This 2K result was independently reproduced on 2026-07-03 from a freshly rebuilt environment (`reports/reproduction-and-ablation-2026-07-03.md`), confirming it is deterministic and not a logging artifact.
+`benchmarks/test_hybrid_needle.py` holds an earlier version of the same three changes with 4-bit keys. It fails its 800-token needle test (`logs/test-hybrid-needle-2026-10-05.log`), and no raw output shows it passing.
+
+These changes together, combined with the Hybrid K5/V4 configuration described in Finding 2, moved needle retrieval from 0% to 100% at 4K, 8K, and 16K tokens in the recorded run (`benchmarks/phase3_results.json`). At 2K the recorded run scored 50%: the model retrieved the locus VcMYB4 but corrupted the allele name FROSTBLOCK-7 into "FROSTst7". The 4K pass depends on the case-insensitive match, because the response wrote "FROstblock-7". The 2026-07-03 rerun with the original modified files reproduced the text of all four responses (`logs/hybrid-reproduction-2026-07-03.json`). The 2026-10-05 rerun with the rebuild scored 100% only at 16K (see "Reproduction on 2026-10-05" below).
 
 ### Upstream Status
 
@@ -56,7 +60,7 @@ The QJL orthogonal projection and `sqrt(d)` scale factor changes were merged int
 
 ### The Asymmetry
 
-Even with the working QJL variant (orthogonal projection, matched scale factor, damping), a symmetric 4-bit allocation failed at 2K context. Assigning 4 bits to both K and V, with K using 4-bit MSE plus 1-bit QJL and V using the same, was not enough for reliable fact retrieval.
+Even with the working QJL variant (orthogonal projection, matched scale factor, damping), 4-bit keys were not enough for reliable fact retrieval. With keys at 4 bits (3-bit MSE plus 1-bit QJL) and values at 4-bit MSE, `benchmarks/test_hybrid_needle.py` does not retrieve the needle from an 800-token prompt (`logs/test-hybrid-needle-2026-10-05.log`).
 
 The diagnostic evidence for this asymmetry appeared early and clearly. In both the CPU-only path and the Metal path in Round 2:
 
@@ -79,9 +83,9 @@ Values, by contrast, only determine what information is returned from a position
 
 The fix is to allocate bits asymmetrically. Assign 5 bits to keys (4-bit MSE base plus 1-bit QJL correction) and 4 bits to values (4-bit MSE only, no QJL). This gives keys more precision where the attention mechanism is sensitive, while values remain at 4-bit which is sufficient for their role.
 
-The average bit rate is 4.5 bits per cache element, which is slightly above the 4-bit symmetric case. The memory savings compared to FP16 are still approximately 3.6x.
+The average is 4.5 bits per cache element. A bit-packed layout would make the cache about 3.4x to 3.6x smaller than FP16, depending on how the norms are stored. mlx-optiq 0.0.1 does not pack bits: it stores one byte per codebook index and one byte per QJL sign. The measured Hybrid cache at 16K is 435.6 MB against 563.4 MB for FP16, 1.29x smaller (`logs/kv-memory-16k-2026-10-05.json`).
 
-This configuration achieved 100% needle retrieval at 4K, 8K, and 16K tokens, where the stock 4-bit symmetric configuration achieved 0% at all lengths. At 2K the recorded run scored 50% (one of the two needle facts retrieved), reproduced exactly on 2026-07-03; see the note under the results table in the README.
+In the recorded run this configuration scored 100% at 4K, 8K, and 16K tokens and 50% at 2K (`benchmarks/phase3_results.json`). Stock MSE-only 4-bit scores 0% at all four lengths. The same K5/V4 bits with the stock Gaussian QJL also score 0%, with degenerate text (`logs/needle-repro-2026-10-05.json`). So the bit allocation alone does not fix retrieval: the orthogonal QJL change is also needed. The 2026-10-05 rebuild scored 50% at 2K, 4K, and 8K and 100% at 16K; see the notes under the results table in the README.
 
 The asymmetry insight is consistent with the broader literature on attention quantization. Keys encode positional and semantic identity for retrieval. Values encode content. These have different precision requirements, and hardware implementations that ignore this distinction leave accuracy on the table.
 
@@ -149,7 +153,7 @@ The Metal GPU support additions for tq3\_0 (Bug B) and the norm correction plus 
 
 ### Speed Reality on M1 Pro
 
-The Aaryan fork's tq3\_0 is substantially slower than q8\_0 on M1 Pro at the tested context lengths. At 2K tokens, q8\_0 prefill ran at approximately 456 tokens per second while tq3\_0 prefill ran at approximately 23 tokens per second. At 4K, q8\_0 ran at 408 tokens per second while tq3\_0 ran at 12 tokens per second.
+The Aaryan fork's tq3\_0 is substantially slower than q8\_0 on M1 Pro at the tested context lengths. At 2K tokens, q8\_0 prefill ran at approximately 456 tokens per second while tq3\_0 prefill ran at approximately 23 tokens per second. At 4K, q8\_0 ran at 408 tokens per second while tq3\_0 ran at 12 tokens per second (`logs/needle-2k-q8_0.log`, `logs/needle-2k-tq3_0.log`, `logs/needle-4k-q8_0.log`, `logs/needle-4k-tq3_0.log`).
 
 This is expected for an early implementation without optimized dequantization kernels. The dequantize path performs a full 128x128 matrix-vector multiply (the inverse Walsh-Hadamard rotation) for each block decoded. This is O(d^2) per block. An optimized implementation would use a fast Walsh-Hadamard transform at O(d log d). The TheTom benchmark results from an M5 Max system show 13 to 35 times slower generation with turbo3 compared to q8\_0 even on faster hardware, suggesting the bottleneck is structural in the current algorithm implementation, not specific to M1 Pro.
 
@@ -157,6 +161,40 @@ This is expected for an early implementation without optimized dequantization ke
 
 Between Round 1 and Round 2, TheTom's Python prototype updated substantially. Round 1 found 144 tests. Round 2 found 538 tests collected, with 532 passing and 6 skipped. The test suite expanded significantly. The prototype's real-model validation on Qwen3-1.7B showed cosine similarity of 0.92 for uniform 3-bit and 0.97 for uniform 4-bit compression on real KV tensors, which is consistent with the paper's quality claims for those configurations.
 
-### Memory Savings Are Real
+### Memory: Smaller Cache, Higher Peak
 
-The theoretical 4x compression ratio was confirmed at all tested context lengths. At 16K tokens, FP16 KV cache uses 562 MB and 4-bit TurboQuant uses 140 MB. For qwen2.5:3b on 16GB hardware the savings are not operationally critical because the total memory budget is comfortable even without compression. The value proposition grows with larger models at longer contexts. A 7B model at 128K context would use approximately 9.2 GB for the KV cache in FP16 versus approximately 2.3 GB with 4-bit TurboQuant, which is the difference between OOM risk and a comfortable fit on 16GB hardware (at 64K the corresponding figures are approximately 4.6 GB versus 1.2 GB).
+On the MLX path the stored cache is smaller with either quantized configuration, but the MLX peak memory is higher (`logs/kv-memory-16k-2026-10-05.json`). At 16K tokens:
+
+* FP16 stores 563.4 MB and peaks at 3076.8 MB.
+* Stock MSE-only 4-bit stores 290.4 MB (1.94x smaller) and peaks at 3190.6 MB.
+* Hybrid K5/V4 stores 435.6 MB (1.29x smaller) and peaks at 3245.4 MB.
+
+Two properties of mlx-optiq 0.0.1 explain this. First, it stores one byte per element (uint8 codebook indices and int8 QJL signs), so a 4-bit cache takes about half the FP16 bytes, not a quarter. Second, the cache returns the dequantized K/V in float32. Attention and the residual stream then run in float32 for every layer after the first. The peak occurs during prefill, where the float32 buffers cost more than the smaller cache saves. A diagnostic run that casts the K/V back to FP16 before attention peaks at 2867.6 MB, 209 MB below the FP16 baseline. With packed bits and FP16 output, the Hybrid cache would be about 3.4x smaller than FP16.
+
+The round 1 log reported 562 MB for FP16 and 140 MB for 4-bit TurboQuant at 16K, a 4.0x ratio. Those were formula figures for a packed 4-bit cache, not measurements. The round 1 projections for a 7B model at 64K and 128K context are formula figures too, and no run in this repository tests them.
+
+For qwen2.5:3b on 16GB hardware the cache size is not operationally critical: the FP16 run peaks at 3.1 GB at 16K. A smaller cache would matter for larger models at longer contexts, but on the MLX path only with a packed layout and FP16 output.
+
+---
+
+## Reproduction on 2026-10-05
+
+This pass reran the MLX headline numbers from committed code, with raw output. The modified mlx-optiq files behind the phase3 Hybrid runs were not kept, so `benchmarks/tq_patched.py` rebuilds the changes over the stock 0.0.1 package. `requirements.txt` pins the environment, with the same mlx, mlx-lm, mlx-optiq, transformers, and numpy versions as the 2026-07-03 pass. The machine is the same M1 Pro, now on macOS 27.0.1. `benchmarks/needle_repro.py` uses the phase3 prompt builder and scorer unchanged, and it writes each full response with exact-case and case-insensitive scores (`logs/needle-repro-2026-10-05.json`).
+
+What reproduced:
+
+* MLX FP16 baseline: 100% at all four lengths, with the same response text and the same MLX peak memory as phase3.
+* Stock MSE-only 4-bit: 0% at all four lengths. Its peaks (2713.8, 2761.7, 2885.7, and 3190.6 MB) match the round 1 log figures (2714, 2762, 2886, and 3191 MB).
+* Hybrid K5/V4: 50% at 2K and 100% at 16K, the same scores as the recorded run. At 16K the response has both facts in exact case.
+* The QJL ablation keeps the same ordering of configurations (`logs/qjl-ablation-2026-10-05.json`).
+
+What did not reproduce:
+
+* Hybrid K5/V4 at 4K and 8K scored 50% instead of 100%. At 4K the response wrote "FRstblock-7". At 8K it named only the locus.
+* No Hybrid response text matches phase3.
+* The rebuild's Hybrid peak memory differs from phase3 by -48.7, +4.0, -170.4, and -58.2 MB at 2K, 4K, 8K, and 16K. The FP16 and stock peaks match exactly on the same machine, so the rebuild runs a different operation graph from the lost files. The cause was not found.
+* No QJL ablation response text matches the July run, although the script and package versions are the same.
+* The phase 2 short-prompt rerun (`logs/phase2-rerun-2026-10-05.log`) matches the round 1 FP16 text, but the MSE-only 4-bit text diverges after a few words.
+* `benchmarks/test_hybrid_needle.py` fails (`logs/test-hybrid-needle-2026-10-05.log`). It tests 4-bit keys, not the Hybrid configuration.
+
+MLX peak memory is a stable fingerprint of the operation graph: the FP16 and stock peaks match runs from earlier macOS versions. Response text through a quantized cache is not stable. The stock MSE-only and ablation texts changed with the OS update while the code and package versions stayed the same. Greedy decoding through a quantized cache turns small floating point differences into different tokens. The 4K and 8K Hybrid differences therefore have two possible causes: the rebuild differs from the lost files, and the OS changed. These runs cannot separate the two. The 2026-07-03 rerun with the original files is the evidence for the recorded 4K and 8K scores. The 16K pass is the only Hybrid pass that reproduces from committed code.

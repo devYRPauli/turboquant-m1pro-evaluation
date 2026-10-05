@@ -96,9 +96,13 @@ fixes to a broken formula.
 
 ## Reproducing this pass
 
-Both scripts require a Python environment with the modified optiq package
-installed (orthogonal QJL projection and sqrt(d) scale). See the Environment
-section above. Then:
+Note added 2026-10-05: the modified optiq files used in Part 1 were not kept.
+`hybrid_reproduction.py` now imports `make_turbo_kv_caches` from
+`benchmarks/tq_patched.py`, which rebuilds the same changes as subclasses of
+stock mlx-optiq 0.0.1. `qjl_ablation.py` needs only the stock package. Install
+the pinned environment from `requirements.txt`. On macOS 27.0.1 neither script
+reproduces the July response text exactly; see `FINDINGS.md`, section
+"Reproduction on 2026-10-05". Then:
 
 ```
 python benchmarks/hybrid_reproduction.py   # writes logs/hybrid-reproduction.json
