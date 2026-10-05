@@ -1,0 +1,170 @@
+
+============================================================
+  TurboQuant Phase 2 — Inference Benchmark
+  Model: mlx-community/Qwen2.5-3B-Instruct-4bit
+  Max tokens: 150
+============================================================
+
+Loading mlx-community/Qwen2.5-3B-Instruct-4bit...
+Fetching 9 files:   0%|          | 0/9 [00:00<?, ?it/s]Fetching 9 files: 100%|██████████| 9/9 [00:00<00:00, 3054.10it/s]
+
+Model: 36 layers, 2 KV heads, head_dim=128
+
+Theoretical KV memory at 512 tokens:
+  FP16 baseline       : 18.0 MB  (1.0× vs FP16)
+  4-bit TQ-MSE        : 4.5 MB  (4.0× vs FP16)
+  3-bit TQ-MSE        : 3.4 MB  (5.3× vs FP16)
+  2-bit TQ-MSE        : 2.2 MB  (8.0× vs FP16)
+
+============================================================
+  Baseline — no compression (FP16 KV)
+============================================================
+  Generated: 150 tokens in 2.67s  →  56.2 tok/s
+  First tok: 573 ms
+  Memory:    1656 → 1668 MB  (Δ +12 MB)
+
+  Response:
+   Anthocyanins are water-soluble pigments that give blueberries their characteristic blue-violet color. They are synthesized de novo from the amino acid anthocyanidins. The biosynthetic pathway involves multiple enzymatic reactions:
+
+1. Anthocyanidins are synthesized from shikimate pathway intermediates via phenylalanin...
+
+============================================================
+  TurboQuant-MSE bits=4, no QJL  (3.8× compression)
+============================================================
+  Generated: 150 tokens in 4.69s  →  32.0 tok/s
+  First tok: 343 ms
+  Memory:    1660 → 1746 MB  (Δ +86 MB)
+
+  Response:
+   the fruit. Anthococyanins are a class of pigments that are found in many fruits and vegetables, including blueberries. They are responsible for the blue or purple color of the fruit. Anthococyanins are are synthesized in the fruit through the process of biosinogenesis, This process involves the conversionversion of an...
+
+============================================================
+  TurboQuant-MSE bits=3, no QJL  (4.9× compression)
+============================================================
+  Generated: 150 tokens in 4.00s  →  37.5 tok/s
+  First tok: 215 ms
+  Memory:    1660 → 1757 MB  (Δ +96 MB)
+
+  Response:
+   the of the of of fruit. Anthocyanyanins is a a of of quality of fruit fruit fruit fruit fruit fruit fruit.
+
+ development.
+
+ of of of of of of of of of of of of of fruit fruit development development of of of of fruit quality quality quality quality quality of of of of of of of of of of of ofive of of of ofive of of of...
+
+============================================================
+  TurboQuant-MSE bits=2, no QJL  (7.1× compression)
+============================================================
+  Generated: 150 tokens in 3.82s  →  39.3 tok/s
+  First tok: 205 ms
+  Memory:    1660 → 1767 MB  (Δ +107 MB)
+
+  Response:
+   the biosynthesisst biosynthesisynthesis of of the theynthesisynthesisynthesis
+
+ the
+
+
+
+The
+
+
+
+ ofThe
+
+regulation
+
+in
+
+
+
+
+
+ofreg
+
+ of of of of of of ofof ofof of*of of of of of
+
+ of ofof of of ofofregofofof of of
+
+ mamofofofofof of the of of the of of of of of of of of ofofof ofof
+
+ of of of of of of
+
+ofof of of of of ...
+
+============================================================
+  TurboQuant bits=4, WITH QJL  [v0.0.1 bug — expect degradation]
+============================================================
+  Generated: 150 tokens in 5.30s  →  28.3 tok/s
+  First tok: 301 ms
+  Memory:    1660 → 1746 MB  (Δ +85 MB)
+
+  Response:
+   genetic genetic? genetic genetic genetic genetic genetic genetic genetic. genetic genetic genetic genetic genetic genetic genetic genetic genetic genetic genetic genetic genetic genetic genetic genetic genetic genetic genetic genetic genetic genetic genetic genetic genetic genetic genetic genetic genetic genetic genet...
+
+
+============================================================
+  SUMMARY
+============================================================
+  Config                                      tok/s  1st ms    MemΔ  KV bits
+  ------------------------------------------ ------ ------- -------  -------
+  Baseline — no compression (FP16 KV)          56.2     573    +12MB   16
+  TurboQuant-MSE bits=4, no QJL  (3.8× compression)   32.0     343    +86MB   4
+  TurboQuant-MSE bits=3, no QJL  (4.9× compression)   37.5     215    +96MB   3
+  TurboQuant-MSE bits=2, no QJL  (7.1× compression)   39.3     205   +107MB   2
+  TurboQuant bits=4, WITH QJL  [v0.0.1 bug — expect degradation]   28.3     301    +86MB   4+QJL
+
+
+============================================================
+  RESPONSE QUALITY (first 250 chars)
+============================================================
+
+  [Baseline — no compression (FP16 KV)]
+   Anthocyanins are water-soluble pigments that give blueberries their characteristic blue-violet color. They are synthesized de novo from the amino acid anthocyanidins. The biosynthetic pathway involves multiple enzymatic reactions:
+
+1. Anthocyanidins
+
+  [TurboQuant-MSE bits=4, no QJL  (3.8× compression)]
+   the fruit. Anthococyanins are a class of pigments that are found in many fruits and vegetables, including blueberries. They are responsible for the blue or purple color of the fruit. Anthococyanins are are synthesized in the fruit through the proces
+
+  [TurboQuant-MSE bits=3, no QJL  (4.9× compression)]
+   the of the of of fruit. Anthocyanyanins is a a of of quality of fruit fruit fruit fruit fruit fruit fruit.
+
+ development.
+
+ of of of of of of of of of of of of of fruit fruit development development of of of of fruit quality quality quality quality 
+
+  [TurboQuant-MSE bits=2, no QJL  (7.1× compression)]
+   the biosynthesisst biosynthesisynthesis of of the theynthesisynthesisynthesis
+
+ the
+
+
+
+The
+
+
+
+ ofThe
+
+regulation
+
+in
+
+
+
+
+
+ofreg
+
+ of of of of of of ofof ofof of*of of of of of
+
+ of ofof of of ofofregofofof of of
+
+ mamofofofofof of the of of the of o
+
+  [TurboQuant bits=4, WITH QJL  [v0.0.1 bug — expect degradation]]
+   genetic genetic? genetic genetic genetic genetic genetic genetic genetic. genetic genetic genetic genetic genetic genetic genetic genetic genetic genetic genetic genetic genetic genetic genetic genetic genetic genetic genetic genetic genetic genetic
+
+
+Done.

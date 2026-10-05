@@ -1,0 +1,506 @@
+{
+  "environment": {
+    "date": "2026-10-05",
+    "chip": "Apple M1 Pro",
+    "memory_gb": 16,
+    "macos": "27.0.1",
+    "python": "3.12.14",
+    "packages": {
+      "mlx": "0.31.1",
+      "mlx-metal": "0.31.1",
+      "mlx-lm": "0.31.1",
+      "mlx-optiq": "0.0.1",
+      "transformers": "5.3.0",
+      "tokenizers": "0.22.2",
+      "numpy": "2.4.3",
+      "scipy": "1.18.1"
+    },
+    "model": "mlx-community/Qwen2.5-3B-Instruct-4bit",
+    "model_revision": "4f83f8f146fdf28b512a06562b671d7af4fab457"
+  },
+  "target_tokens": 16000,
+  "actual_tokens": 15947,
+  "max_new_tokens": 80,
+  "kv_out_dtype": {
+    "baseline": "mlx.core.float16",
+    "stock_mse4": "mlx.core.float32",
+    "patched_k5v4": "mlx.core.float32",
+    "patched_k5v4_f16out": "mlx.core.float16"
+  },
+  "runs": [
+    {
+      "round": 0,
+      "config": "baseline",
+      "generated_tokens": 80,
+      "weights_mb": 1655.8,
+      "prefill_peak_mb": 3076.8,
+      "decode_peak_mb": 2253.6,
+      "peak_mb": 3076.8,
+      "active_prefill_mb": 2250.6,
+      "active_end_mb": 2250.3,
+      "freed_by_cache_mb": 567.0,
+      "cache_allocated_mb": 567.0,
+      "cache_filled_mb": 563.4
+    },
+    {
+      "round": 0,
+      "config": "stock_mse4",
+      "generated_tokens": 80,
+      "weights_mb": 1655.8,
+      "prefill_peak_mb": 3190.6,
+      "decode_peak_mb": 2509.6,
+      "peak_mb": 3190.6,
+      "active_prefill_mb": 2411.0,
+      "active_end_mb": 2412.2,
+      "freed_by_cache_mb": 296.9,
+      "cache_allocated_mb": 292.2,
+      "cache_filled_mb": 290.4
+    },
+    {
+      "round": 0,
+      "config": "patched_k5v4",
+      "generated_tokens": 80,
+      "weights_mb": 1655.8,
+      "prefill_peak_mb": 3245.4,
+      "decode_peak_mb": 2649.0,
+      "peak_mb": 3245.4,
+      "active_prefill_mb": 2547.9,
+      "active_end_mb": 2549.1,
+      "freed_by_cache_mb": 444.2,
+      "cache_allocated_mb": 438.4,
+      "cache_filled_mb": 435.6
+    },
+    {
+      "round": 0,
+      "config": "patched_k5v4_f16out",
+      "generated_tokens": 80,
+      "weights_mb": 1655.8,
+      "prefill_peak_mb": 2867.6,
+      "decode_peak_mb": 2664.5,
+      "peak_mb": 2867.6,
+      "active_prefill_mb": 2623.0,
+      "active_end_mb": 2625.2,
+      "freed_by_cache_mb": 437.6,
+      "cache_allocated_mb": 431.9,
+      "cache_filled_mb": 429.2
+    },
+    {
+      "round": 1,
+      "config": "baseline",
+      "generated_tokens": 80,
+      "weights_mb": 1655.8,
+      "prefill_peak_mb": 3076.8,
+      "decode_peak_mb": 2253.6,
+      "peak_mb": 3076.8,
+      "active_prefill_mb": 2250.6,
+      "active_end_mb": 2250.3,
+      "freed_by_cache_mb": 567.0,
+      "cache_allocated_mb": 567.0,
+      "cache_filled_mb": 563.4
+    },
+    {
+      "round": 1,
+      "config": "stock_mse4",
+      "generated_tokens": 80,
+      "weights_mb": 1655.8,
+      "prefill_peak_mb": 3190.6,
+      "decode_peak_mb": 2509.6,
+      "peak_mb": 3190.6,
+      "active_prefill_mb": 2411.0,
+      "active_end_mb": 2412.2,
+      "freed_by_cache_mb": 296.9,
+      "cache_allocated_mb": 292.2,
+      "cache_filled_mb": 290.4
+    },
+    {
+      "round": 1,
+      "config": "patched_k5v4",
+      "generated_tokens": 80,
+      "weights_mb": 1655.8,
+      "prefill_peak_mb": 3245.4,
+      "decode_peak_mb": 2649.0,
+      "peak_mb": 3245.4,
+      "active_prefill_mb": 2547.9,
+      "active_end_mb": 2549.1,
+      "freed_by_cache_mb": 444.2,
+      "cache_allocated_mb": 438.4,
+      "cache_filled_mb": 435.6
+    },
+    {
+      "round": 1,
+      "config": "patched_k5v4_f16out",
+      "generated_tokens": 80,
+      "weights_mb": 1655.8,
+      "prefill_peak_mb": 2867.6,
+      "decode_peak_mb": 2664.5,
+      "peak_mb": 2867.6,
+      "active_prefill_mb": 2623.0,
+      "active_end_mb": 2625.2,
+      "freed_by_cache_mb": 437.6,
+      "cache_allocated_mb": 431.9,
+      "cache_filled_mb": 429.2
+    },
+    {
+      "round": 2,
+      "config": "baseline",
+      "generated_tokens": 80,
+      "weights_mb": 1655.8,
+      "prefill_peak_mb": 3076.8,
+      "decode_peak_mb": 2253.6,
+      "peak_mb": 3076.8,
+      "active_prefill_mb": 2250.6,
+      "active_end_mb": 2250.3,
+      "freed_by_cache_mb": 567.0,
+      "cache_allocated_mb": 567.0,
+      "cache_filled_mb": 563.4
+    },
+    {
+      "round": 2,
+      "config": "stock_mse4",
+      "generated_tokens": 80,
+      "weights_mb": 1655.8,
+      "prefill_peak_mb": 3190.6,
+      "decode_peak_mb": 2509.6,
+      "peak_mb": 3190.6,
+      "active_prefill_mb": 2411.0,
+      "active_end_mb": 2412.2,
+      "freed_by_cache_mb": 296.9,
+      "cache_allocated_mb": 292.2,
+      "cache_filled_mb": 290.4
+    },
+    {
+      "round": 2,
+      "config": "patched_k5v4",
+      "generated_tokens": 80,
+      "weights_mb": 1655.8,
+      "prefill_peak_mb": 3245.4,
+      "decode_peak_mb": 2649.0,
+      "peak_mb": 3245.4,
+      "active_prefill_mb": 2547.9,
+      "active_end_mb": 2549.1,
+      "freed_by_cache_mb": 444.2,
+      "cache_allocated_mb": 438.4,
+      "cache_filled_mb": 435.6
+    },
+    {
+      "round": 2,
+      "config": "patched_k5v4_f16out",
+      "generated_tokens": 80,
+      "weights_mb": 1655.8,
+      "prefill_peak_mb": 2867.6,
+      "decode_peak_mb": 2664.5,
+      "peak_mb": 2867.6,
+      "active_prefill_mb": 2623.0,
+      "active_end_mb": 2625.2,
+      "freed_by_cache_mb": 437.6,
+      "cache_allocated_mb": 431.9,
+      "cache_filled_mb": 429.2
+    },
+    {
+      "round": 3,
+      "config": "baseline",
+      "generated_tokens": 80,
+      "weights_mb": 1655.8,
+      "prefill_peak_mb": 3076.8,
+      "decode_peak_mb": 2253.6,
+      "peak_mb": 3076.8,
+      "active_prefill_mb": 2250.6,
+      "active_end_mb": 2250.3,
+      "freed_by_cache_mb": 567.0,
+      "cache_allocated_mb": 567.0,
+      "cache_filled_mb": 563.4
+    },
+    {
+      "round": 3,
+      "config": "stock_mse4",
+      "generated_tokens": 80,
+      "weights_mb": 1655.8,
+      "prefill_peak_mb": 3190.6,
+      "decode_peak_mb": 2509.6,
+      "peak_mb": 3190.6,
+      "active_prefill_mb": 2411.0,
+      "active_end_mb": 2412.2,
+      "freed_by_cache_mb": 296.9,
+      "cache_allocated_mb": 292.2,
+      "cache_filled_mb": 290.4
+    },
+    {
+      "round": 3,
+      "config": "patched_k5v4",
+      "generated_tokens": 80,
+      "weights_mb": 1655.8,
+      "prefill_peak_mb": 3245.4,
+      "decode_peak_mb": 2649.0,
+      "peak_mb": 3245.4,
+      "active_prefill_mb": 2547.9,
+      "active_end_mb": 2549.1,
+      "freed_by_cache_mb": 444.2,
+      "cache_allocated_mb": 438.4,
+      "cache_filled_mb": 435.6
+    },
+    {
+      "round": 3,
+      "config": "patched_k5v4_f16out",
+      "generated_tokens": 80,
+      "weights_mb": 1655.8,
+      "prefill_peak_mb": 2867.6,
+      "decode_peak_mb": 2664.5,
+      "peak_mb": 2867.6,
+      "active_prefill_mb": 2623.0,
+      "active_end_mb": 2625.2,
+      "freed_by_cache_mb": 437.6,
+      "cache_allocated_mb": 431.9,
+      "cache_filled_mb": 429.2
+    },
+    {
+      "round": 4,
+      "config": "baseline",
+      "generated_tokens": 80,
+      "weights_mb": 1655.8,
+      "prefill_peak_mb": 3076.8,
+      "decode_peak_mb": 2253.6,
+      "peak_mb": 3076.8,
+      "active_prefill_mb": 2250.6,
+      "active_end_mb": 2250.3,
+      "freed_by_cache_mb": 567.0,
+      "cache_allocated_mb": 567.0,
+      "cache_filled_mb": 563.4
+    },
+    {
+      "round": 4,
+      "config": "stock_mse4",
+      "generated_tokens": 80,
+      "weights_mb": 1655.8,
+      "prefill_peak_mb": 3190.6,
+      "decode_peak_mb": 2509.6,
+      "peak_mb": 3190.6,
+      "active_prefill_mb": 2411.0,
+      "active_end_mb": 2412.2,
+      "freed_by_cache_mb": 296.9,
+      "cache_allocated_mb": 292.2,
+      "cache_filled_mb": 290.4
+    },
+    {
+      "round": 4,
+      "config": "patched_k5v4",
+      "generated_tokens": 80,
+      "weights_mb": 1655.8,
+      "prefill_peak_mb": 3245.4,
+      "decode_peak_mb": 2649.0,
+      "peak_mb": 3245.4,
+      "active_prefill_mb": 2547.9,
+      "active_end_mb": 2549.2,
+      "freed_by_cache_mb": 444.2,
+      "cache_allocated_mb": 438.4,
+      "cache_filled_mb": 435.6
+    },
+    {
+      "round": 4,
+      "config": "patched_k5v4_f16out",
+      "generated_tokens": 80,
+      "weights_mb": 1655.8,
+      "prefill_peak_mb": 2867.6,
+      "decode_peak_mb": 2664.5,
+      "peak_mb": 2867.6,
+      "active_prefill_mb": 2623.0,
+      "active_end_mb": 2521.9,
+      "freed_by_cache_mb": 437.6,
+      "cache_allocated_mb": 431.9,
+      "cache_filled_mb": 429.2
+    }
+  ],
+  "summary": {
+    "baseline": {
+      "n": 5,
+      "weights_mb": {
+        "median": 1655.8,
+        "min": 1655.8,
+        "max": 1655.8
+      },
+      "prefill_peak_mb": {
+        "median": 3076.8,
+        "min": 3076.8,
+        "max": 3076.8
+      },
+      "decode_peak_mb": {
+        "median": 2253.6,
+        "min": 2253.6,
+        "max": 2253.6
+      },
+      "peak_mb": {
+        "median": 3076.8,
+        "min": 3076.8,
+        "max": 3076.8
+      },
+      "active_prefill_mb": {
+        "median": 2250.6,
+        "min": 2250.6,
+        "max": 2250.6
+      },
+      "active_end_mb": {
+        "median": 2250.3,
+        "min": 2250.3,
+        "max": 2250.3
+      },
+      "freed_by_cache_mb": {
+        "median": 567.0,
+        "min": 567.0,
+        "max": 567.0
+      },
+      "cache_allocated_mb": {
+        "median": 567.0,
+        "min": 567.0,
+        "max": 567.0
+      },
+      "cache_filled_mb": {
+        "median": 563.4,
+        "min": 563.4,
+        "max": 563.4
+      }
+    },
+    "stock_mse4": {
+      "n": 5,
+      "weights_mb": {
+        "median": 1655.8,
+        "min": 1655.8,
+        "max": 1655.8
+      },
+      "prefill_peak_mb": {
+        "median": 3190.6,
+        "min": 3190.6,
+        "max": 3190.6
+      },
+      "decode_peak_mb": {
+        "median": 2509.6,
+        "min": 2509.6,
+        "max": 2509.6
+      },
+      "peak_mb": {
+        "median": 3190.6,
+        "min": 3190.6,
+        "max": 3190.6
+      },
+      "active_prefill_mb": {
+        "median": 2411.0,
+        "min": 2411.0,
+        "max": 2411.0
+      },
+      "active_end_mb": {
+        "median": 2412.2,
+        "min": 2412.2,
+        "max": 2412.2
+      },
+      "freed_by_cache_mb": {
+        "median": 296.9,
+        "min": 296.9,
+        "max": 296.9
+      },
+      "cache_allocated_mb": {
+        "median": 292.2,
+        "min": 292.2,
+        "max": 292.2
+      },
+      "cache_filled_mb": {
+        "median": 290.4,
+        "min": 290.4,
+        "max": 290.4
+      }
+    },
+    "patched_k5v4": {
+      "n": 5,
+      "weights_mb": {
+        "median": 1655.8,
+        "min": 1655.8,
+        "max": 1655.8
+      },
+      "prefill_peak_mb": {
+        "median": 3245.4,
+        "min": 3245.4,
+        "max": 3245.4
+      },
+      "decode_peak_mb": {
+        "median": 2649.0,
+        "min": 2649.0,
+        "max": 2649.0
+      },
+      "peak_mb": {
+        "median": 3245.4,
+        "min": 3245.4,
+        "max": 3245.4
+      },
+      "active_prefill_mb": {
+        "median": 2547.9,
+        "min": 2547.9,
+        "max": 2547.9
+      },
+      "active_end_mb": {
+        "median": 2549.1,
+        "min": 2549.1,
+        "max": 2549.2
+      },
+      "freed_by_cache_mb": {
+        "median": 444.2,
+        "min": 444.2,
+        "max": 444.2
+      },
+      "cache_allocated_mb": {
+        "median": 438.4,
+        "min": 438.4,
+        "max": 438.4
+      },
+      "cache_filled_mb": {
+        "median": 435.6,
+        "min": 435.6,
+        "max": 435.6
+      }
+    },
+    "patched_k5v4_f16out": {
+      "n": 5,
+      "weights_mb": {
+        "median": 1655.8,
+        "min": 1655.8,
+        "max": 1655.8
+      },
+      "prefill_peak_mb": {
+        "median": 2867.6,
+        "min": 2867.6,
+        "max": 2867.6
+      },
+      "decode_peak_mb": {
+        "median": 2664.5,
+        "min": 2664.5,
+        "max": 2664.5
+      },
+      "peak_mb": {
+        "median": 2867.6,
+        "min": 2867.6,
+        "max": 2867.6
+      },
+      "active_prefill_mb": {
+        "median": 2623.0,
+        "min": 2623.0,
+        "max": 2623.0
+      },
+      "active_end_mb": {
+        "median": 2625.2,
+        "min": 2521.9,
+        "max": 2625.2
+      },
+      "freed_by_cache_mb": {
+        "median": 437.6,
+        "min": 437.6,
+        "max": 437.6
+      },
+      "cache_allocated_mb": {
+        "median": 431.9,
+        "min": 431.9,
+        "max": 431.9
+      },
+      "cache_filled_mb": {
+        "median": 429.2,
+        "min": 429.2,
+        "max": 429.2
+      }
+    }
+  }
+}

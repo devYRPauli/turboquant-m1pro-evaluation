@@ -17,8 +17,11 @@ a retrieval measurement. For actual needle retrieval numbers under the validated
 configuration, use hybrid_reproduction.py, which reuses the full phase3 harness
 (build_prompt with instruct framing plus make_turbo_kv_caches).
 
-Run with a Python environment that has the modified optiq package installed
-(orthogonal QJL, sqrt(d) scale). Fixed seeds; greedy decoding (temp 0).
+Keys use TurboQuantProd with 4 bits (3-bit MSE plus 1-bit QJL), not the 5-bit
+keys of the phase3 Hybrid K5/V4 runs. Values use 4-bit MSE.
+
+Needs only stock mlx-optiq 0.0.1: every change is applied here by subclassing.
+Fixed seeds; greedy decoding (temp 0).
 """
 
 import json
@@ -71,7 +74,7 @@ class ConfigurableProd(TurboQuantProd):
 
 
 class AblationCache(TurboQuantKVCache):
-    """Hybrid K5/V4 cache: K = configurable prod quantizer, V = MSE-only 4-bit."""
+    """K4/V4 cache: K = configurable 4-bit prod quantizer, V = MSE-only 4-bit."""
 
     def __init__(self, head_dim, seed=42, projection="gaussian", scale="d", damping=1.0):
         super().__init__(head_dim, bits=4, use_qjl=True, seed=seed)

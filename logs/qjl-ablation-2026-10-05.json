@@ -1,0 +1,74 @@
+[
+  {
+    "n_ctx": 2000,
+    "actual_tokens": 1950,
+    "projection": "gaussian",
+    "scale": "d",
+    "damping": 1.0,
+    "needle_score": 0.0,
+    "found_FROSTBLOCK-7": false,
+    "found_VcMYB4": false,
+    "gen_seconds": 8.73,
+    "response": "bluebluegengengenbgengengengengengenotypicgengen bluegenengengengen genetgengengengengen gengengengengengen genigen gengen gen gen gen gen gen gen gen gengen gen gen gen gen gengengen gen gen gen gengengen gen gen gengen gengengengen gen gen gen gen gengen gen gen gen gen gen"
+  },
+  {
+    "n_ctx": 2000,
+    "actual_tokens": 1950,
+    "projection": "gaussian",
+    "scale": "sqrt",
+    "damping": 1.0,
+    "needle_score": 0.0,
+    "found_FROSTBLOCK-7": false,
+    "found_VcMYB4": false,
+    "gen_seconds": 7.72,
+    "response": "this sequence in..\n@\\ ,\n,cers i the vess thatssue# This\u6301 vess %@.\u91d1\u9675<|endoftext|> being\n`acement, C@\\,o\u5219\u4f0a\u62c9. vess7\u0412\u0438\u0434\u0435\\n,ing    ,,@\\ summaries,@\\b@\\, vess6\n@\\-"
+  },
+  {
+    "n_ctx": 2000,
+    "actual_tokens": 1950,
+    "projection": "orthogonal",
+    "scale": "d",
+    "damping": 1.0,
+    "needle_score": 0.0,
+    "found_FROSTBLOCK-7": false,
+    "found_VcMYB4": false,
+    "gen_seconds": 8.25,
+    "response": "complex complex complex complex complex process process process process process process process process process process process process process process process process process process process process process process process process process process process process process process "
+  },
+  {
+    "n_ctx": 2000,
+    "actual_tokens": 1950,
+    "projection": "orthogonal",
+    "scale": "sqrt",
+    "damping": 1.0,
+    "needle_score": 0.0,
+    "found_FROSTBLOCK-7": false,
+    "found_VcMYB4": false,
+    "gen_seconds": 8.06,
+    "response": "blueberry breeding is a complex process involving processgengenomic andphenotyping andphenotypingotypingberry breeding is complex process involving involving genomic selection and andphenotypingotypingotyping. blueberry breeding is complex process involving genomic selection andp"
+  },
+  {
+    "n_ctx": 2000,
+    "actual_tokens": 1950,
+    "projection": "orthogonal",
+    "scale": "sqrt",
+    "damping": 0.7,
+    "needle_score": 0.0,
+    "found_FROSTBLOCK-7": false,
+    "found_VcMYB4": false,
+    "gen_seconds": 8.21,
+    "response": "blueberry breeding is a complex process involvinging genomic selection and phenotypingotyping. Blueberry breeding is a complex and phenotyping. Blueberry breeding is a complex process involvinging selection and phenotyping. Blueberry breeding is is the complex process involving g"
+  },
+  {
+    "n_ctx": 2000,
+    "actual_tokens": 1950,
+    "projection": "gaussian",
+    "scale": "d",
+    "damping": 0.7,
+    "needle_score": 0.0,
+    "found_FROSTBLOCK-7": false,
+    "found_VcMYB4": false,
+    "gen_seconds": 8.44,
+    "response": "Bluegengen genomic genomic selectionberry breeding breeding breeding processgenphenphenphen process process genomic selectionphenphen breeding breeding genomic genomic and phenphenotypicgen blueberrygenbigeneticousgeneticigenomic genigen genigen gengen gen gen gen gen gen gengen "
+  }
+]

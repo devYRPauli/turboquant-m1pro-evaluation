@@ -3,7 +3,7 @@ Phase 3 — Long-Context Memory Stress Test
 ==========================================
 Runs needle-in-a-haystack at 2K / 4K / 8K / 16K tokens through:
   A) Ollama qwen2.5:3b  (GGUF Q4_K_M, FP16 KV cache via llama.cpp)
-  B) MLX + TurboQuant-MSE bits=4, no QJL  (4× compressed KV cache)
+  B) MLX + Hybrid K5/V4 TurboQuant KV cache (benchmarks/tq_patched.py)
   C) MLX baseline  (standard KVCache, FP16 equivalent)
 
 Memory measurement strategy:
@@ -173,7 +173,7 @@ def run_mlx(prompt: str, use_turbo: bool) -> tuple[str, float, float, float]:
     from mlx_lm.generate import generate_step
     from mlx_lm.sample_utils import make_sampler
     from mlx_lm.models.cache import KVCache
-    from optiq.core.turbo_kv_cache import make_turbo_kv_caches
+    from tq_patched import make_turbo_kv_caches
 
     model, tokenizer = _load_mlx_model()
     n_layers = len(model.layers)
@@ -327,7 +327,7 @@ def run_all():
         ))
 
         # ── C) MLX + TurboQuant ───────────────────────────────────────────────
-        print(f"\n  [C] MLX + TurboQuant-MSE bits=4  (~4× compressed KV)")
+        print(f"\n  [C] MLX + TurboQuant Hybrid K5/V4")
         mon = MemoryMonitor()
         mon.start()
         try:

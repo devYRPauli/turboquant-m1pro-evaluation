@@ -13,6 +13,7 @@ from pathlib import Path
 # Insert current directory into path to find build_prompt
 sys.path.insert(0, str(Path(__file__).parent.parent / "benchmarks"))
 from build_prompt import build_prompt, score_answer
+from tq_patched import make_turbo_kv_caches as make_hybrid_kv_caches
 
 MODEL_ID = "mlx-community/Qwen2.5-3B-Instruct-4bit"
 TARGET_LENGTHS = [2000, 4000, 8000] # Start with these
@@ -29,7 +30,8 @@ def run_benchmark(model, tokenizer, target_len, config_name, bits, use_qjl):
     if bits == 16:
         cache = [KVCache() for _ in range(n_layers)]
     else:
-        cache = make_turbo_kv_caches(n_layers, head_dim, bits=bits, use_qjl=use_qjl, seed=42)
+        make = make_hybrid_kv_caches if isinstance(bits, tuple) else make_turbo_kv_caches
+        cache = make(n_layers, head_dim, bits=bits, use_qjl=use_qjl, seed=42)
     
     sampler = make_sampler(temp=TEMPERATURE)
     prompt_tokens = mx.array(tokenizer.encode(prompt))

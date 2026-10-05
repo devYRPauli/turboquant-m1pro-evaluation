@@ -2,8 +2,9 @@
 
 Uses the exact original harness:
   - build_prompt / score_answer from benchmarks/build_prompt.py
-  - make_turbo_kv_caches(bits=(5,4), use_qjl=True, seed=42) from the modified optiq
-    package (orthogonal QJL projection, sqrt(d) scale, k_damping=0.7 default)
+  - make_turbo_kv_caches(bits=(5,4), use_qjl=True, seed=42) from tq_patched.py
+    (orthogonal QJL projection, sqrt(d) scale, k_damping=0.7 default), which
+    rebuilds the hand-modified optiq package as subclasses of stock optiq 0.0.1
 
 Goal: settle the 2K needle score and re-confirm 4K/8K/16K for the validated
 Hybrid K5/V4 configuration, comparable to benchmarks/phase3_results.json.
@@ -23,7 +24,7 @@ import os
 BENCH = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BENCH)
 from build_prompt import build_prompt, score_answer  # noqa: E402
-from optiq.core.turbo_kv_cache import make_turbo_kv_caches  # noqa: E402
+from tq_patched import make_turbo_kv_caches  # noqa: E402
 
 MODEL_ID = "mlx-community/Qwen2.5-3B-Instruct-4bit"
 MAX_NEW_TOKENS = 80
