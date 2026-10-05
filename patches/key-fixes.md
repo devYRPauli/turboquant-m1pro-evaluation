@@ -45,7 +45,7 @@ scale = math.sqrt(math.pi / 2.0) / self.d
 scale = math.sqrt(math.pi / 2.0) / math.sqrt(self.d)
 ```
 
-With the coupled change applied, the post-mortem report records an MSE reduction from the QJL stage of 44 percent (0.00023 to 0.000129; no raw output was kept), matching the theoretical `(pi/2 - 1)`, approximately 43 percent, for the undamped estimator. The validated benchmark configuration additionally damps the QJL correction by 0.7, close to the MMSE-optimal shrinkage `2/pi` (approximately 0.6366) whose theoretical reduction is about 64 percent; see `benchmarks/tq_patched.py`.
+With the coupled change applied, the post-mortem report records an MSE reduction from the QJL stage of 44 percent (0.00023 to 0.000129; no raw output was kept), matching the theoretical reduction `2 - pi/2`, approximately 43 percent, for the undamped estimator. The validated benchmark configuration additionally damps the QJL correction by 0.7, close to the MMSE-optimal shrinkage `2/pi` (approximately 0.6366) whose theoretical reduction is about 64 percent; see `benchmarks/tq_patched.py`.
 
 **Source:** `reports/round1-post-mortem-report.md`, `benchmarks/tq_patched.py`
 

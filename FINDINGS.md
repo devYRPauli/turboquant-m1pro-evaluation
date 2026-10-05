@@ -34,7 +34,7 @@ Both primary implementations tested (mlx-optiq and TheTom turboquant\_plus) inde
 
 This is consistent with the finding above. A paper-faithful Gaussian QJL really does make output worse at head dimension 128, so the natural engineering response was to disable the stage. The conclusion of this evaluation is that the two-stage design itself is sound: it works once the projection is orthogonal, the scale matches, and the correction is damped.
 
-The post-mortem report records that with the fixes applied, the QJL correction reduces MSE from 0.00023 to 0.000129 (a 44 percent reduction) and improves cosine similarity to 99.7 percent on real model activations. The 44 percent figure matches the theoretical `(pi/2 - 1)`, approximately 43 percent, for the undamped estimator. The theoretical maximum with MMSE-optimal shrinkage `2/pi` is `1 - 2/pi`, approximately 64 percent. The raw output behind the post-mortem MSE and cosine figures was not kept, so they are not reproducible from this repository.
+The post-mortem report records that with the fixes applied, the QJL correction reduces MSE from 0.00023 to 0.000129 (a 44 percent reduction) and improves cosine similarity to 99.7 percent on real model activations. The 44 percent figure matches the theoretical reduction `2 - pi/2`, approximately 43 percent, for the undamped estimator. With the MMSE-optimal shrinkage `2/pi`, the theoretical reduction is `2/pi`, approximately 64 percent. The raw output behind the post-mortem MSE and cosine figures was not kept, so they are not reproducible from this repository.
 
 ### What the Fix Required
 
