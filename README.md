@@ -75,6 +75,8 @@ guides/
 
 One log file, `logs/phase3-q8_0.log` (137 MB of raw multi-turn llama-cli output), exceeds GitHub's file size limit and is excluded from the published repository via .gitignore. All other logs are included as captured.
 
+The files in `reports/` and `guides/` are kept as written at the time. Some of their claims were later corrected. Where they disagree with this README or `FINDINGS.md`, the README and `FINDINGS.md` take precedence, because they cite a raw file for each number.
+
 ## Hardware and Environment
 
 * Machine: MacBook Pro, Apple M1 Pro chip, 16GB unified memory, 512GB SSD
@@ -111,10 +113,10 @@ The needle score counts two facts, FROSTBLOCK-7 and VcMYB4, matched without rega
 
 | Configuration | Context | Recorded | 2026-10-05 | Raw output |
 |---|---|---|---|---|
-| Ollama baseline (q8\_0) | 2K, 4K, 8K, 16K | 100% all lengths | not rerun | `benchmarks/phase3_results.json` |
+| Ollama baseline (Q4\_K\_M weights, FP16 KV) | 2K, 4K, 8K, 16K | 100% all lengths | not rerun | `benchmarks/phase3_results.json` |
 | MLX baseline (FP16 KV) | 2K, 4K, 8K, 16K | 100% all lengths | 100% all lengths | `benchmarks/phase3_results.json`, `logs/needle-repro-2026-10-05.json` |
 | MLX stock MSE-only 4-bit | 2K, 4K, 8K, 16K | 0% all lengths | 0% all lengths | `logs/needle-repro-2026-10-05.json` (the round 1 run kept no raw file) |
-| MLX stock QJL, 4-bit keys (paper-faithful Gaussian) | 2K | Degenerate (word loops) | Degenerate (word loops) | `logs/qjl-ablation-2026-07-03.json`, `logs/qjl-ablation-2026-10-05.json` |
+| MLX stock QJL, 4-bit keys (paper-faithful Gaussian) | 36 tokens, 2K | Degenerate (word loops) | Degenerate (word loops) | `logs/phase2-rerun-2026-10-05.log`, `logs/qjl-ablation-2026-07-03.json`, `logs/qjl-ablation-2026-10-05.json` |
 | MLX K5/V4 bits with stock Gaussian QJL | 2K, 4K, 8K, 16K | not run | 0% all lengths, degenerate text | `logs/needle-repro-2026-10-05.json` |
 | MLX Hybrid K5/V4 (orthogonal QJL, matched scale, 0.7 damping) | 2K | 50% | 50% | `benchmarks/phase3_results.json`, `logs/needle-repro-2026-10-05.json` |
 | MLX Hybrid K5/V4 (orthogonal QJL, matched scale, 0.7 damping) | 4K | 100% | 50% | same |
@@ -135,11 +137,11 @@ Speed at 16K tokens (15947 prompt tokens, up to 80 generated) with Qwen2.5-3B on
 
 | Runner | Reported tokens per second | Wall time for the request |
 |---|---|---|
-| Ollama q8\_0 | 37.5 (decode only) | 49.3 s |
+| Ollama (FP16 KV) | 37.5 (decode only) | 49.3 s |
 | MLX baseline FP16 | 2.0 (prefill included) | 39.9 s |
 | MLX Hybrid K5/V4 | 1.1 (prefill included) | 71.4 s |
 
-The two tokens-per-second figures measure different things. Ollama reports its own decode rate, which excludes the prompt. The MLX figure divides the generated tokens by the total time, which includes the 16K prefill. Wall time is the closer comparison, but the Ollama wall time also covers the HTTP call and any model load. The Hybrid cache is slower than FP16 because it dequantizes the full cache at every step, with 128x128 matrix multiplies, in unfused MLX operations.
+The phase3 request to Ollama sets no KV cache type, so Ollama used its default, f16, unless `OLLAMA_KV_CACHE_TYPE` was set on the server. No raw output records the server settings. The two tokens-per-second figures measure different things. Ollama reports its own decode rate, which excludes the prompt. The MLX figure divides the generated tokens by the total time, which includes the 16K prefill. Wall time is the closer comparison, but the Ollama wall time also covers the HTTP call and any model load. The Hybrid cache is slower than FP16 because it dequantizes the full cache at every step, with 128x128 matrix multiplies, in unfused MLX operations.
 
 KV memory at 16K tokens, from `logs/kv-memory-16k-2026-10-05.json`. Each configuration ran 5 times in alternating order, and all 5 runs gave identical values. MB is 2^20 bytes. The model weights take 1655.8 MB.
 

@@ -1,10 +1,10 @@
 # Key Code Fixes
 
-This document describes the five concrete code changes that moved needle retrieval from 0% to 100% at 16K tokens. Actual diffs for the llama.cpp changes are in the .patch files alongside this document; the Python changes (Fixes 1 and 2) are described here and are visible in `benchmarks/test_hybrid_needle.py` and in upstream pull request 93.
+This document describes the five concrete code changes behind the results in the README. Fixes 1 and 2, with the Hybrid K5/V4 bit allocation and 0.7 damping, produce the MLX needle results. Fixes 3 to 5 apply to the llama.cpp forks. Actual diffs for the llama.cpp changes are in the .patch files alongside this document. The Python changes (Fixes 1 and 2) are rebuilt in `benchmarks/tq_patched.py` and were merged upstream in pull request 93.
 
 ## Fix 1: QJL Orthogonal Projection (mlx-optiq / turboquant_plus)
 
-**File:** `optiq/core/turbo_quant.py` (installed mlx-optiq package) and `turboquant_plus/turboquant/qjl.py`
+**File:** `optiq/core/turbo_quant.py` (installed mlx-optiq package, edited in place and not kept; rebuilt in `benchmarks/tq_patched.py`) and `turboquant_plus/turboquant/qjl.py`
 
 **Behavior:** The QJL stage used a random Gaussian matrix S for the projection `sign(S * residual)`, which is exactly what the paper specifies (Definition 1). Gaussian projections are unbiased in expectation but introduce variance. For real LLM KV vectors with head dimension 128, this variance is large relative to the signal. Every attention step accumulates a small error, and over thousands of tokens the attention scores collapse. The symptom was word-loop degeneration ("genetic genetic genetic...") the moment QJL was enabled. This is a practical failure of the paper-faithful construction, not an implementation bug.
 
@@ -25,13 +25,13 @@ def generate_orthogonal_matrix(d, seed=42):
     return Q
 ```
 
-**Source:** `reports/round1-post-mortem-report.md`, `benchmarks/test_hybrid_needle.py`
+**Source:** `reports/round1-post-mortem-report.md`, `benchmarks/tq_patched.py`
 
 ---
 
 ## Fix 2: QJL Dequantization Scale Factor (mlx-optiq / turboquant_plus)
 
-**File:** `optiq/core/turbo_quant.py` (installed mlx-optiq package)
+**File:** `optiq/core/turbo_quant.py` (installed mlx-optiq package, edited in place and not kept; rebuilt in `benchmarks/tq_patched.py`)
 
 **Behavior:** The dequantization formula applied a scale of `sqrt(pi/2) / d` to the QJL correction term. This is the paper's formula, and it is the correct unbiased scale for the paper's Gaussian projection matrix, whose rows have norm near `sqrt(d)`. For the orthogonal matrix introduced in Fix 1, whose rows have norm 1, the matching unbiased scale is `sqrt(pi/2) / sqrt(d)`. Keeping the Gaussian scale with an orthogonal matrix would make the correction approximately 11 times too small at d=128 (sqrt(128) = 11.31). The two changes therefore form one coupled substitution.
 
@@ -45,9 +45,9 @@ scale = math.sqrt(math.pi / 2.0) / self.d
 scale = math.sqrt(math.pi / 2.0) / math.sqrt(self.d)
 ```
 
-With the coupled change applied, the measured MSE reduction from the QJL stage was 44 percent (0.00023 to 0.000129), matching the theoretical `(pi/2 - 1)`, approximately 43 percent, for the undamped estimator. The validated benchmark configuration additionally damps the QJL correction by 0.7, close to the MMSE-optimal shrinkage `2/pi` (approximately 0.6366) whose theoretical reduction is about 64 percent; see `benchmarks/test_hybrid_needle.py`.
+With the coupled change applied, the post-mortem report records an MSE reduction from the QJL stage of 44 percent (0.00023 to 0.000129; no raw output was kept), matching the theoretical `(pi/2 - 1)`, approximately 43 percent, for the undamped estimator. The validated benchmark configuration additionally damps the QJL correction by 0.7, close to the MMSE-optimal shrinkage `2/pi` (approximately 0.6366) whose theoretical reduction is about 64 percent; see `benchmarks/tq_patched.py`.
 
-**Source:** `reports/round1-post-mortem-report.md`, `benchmarks/test_hybrid_needle.py`
+**Source:** `reports/round1-post-mortem-report.md`, `benchmarks/tq_patched.py`
 
 ---
 
