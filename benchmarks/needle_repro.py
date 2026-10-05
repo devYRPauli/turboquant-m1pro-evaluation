@@ -6,14 +6,15 @@ score that phase3_results.json reports. Each run also records an exact-case
 score, the full response text, and the generated token ids.
 
 Configs:
-  baseline      mlx-lm KVCache (FP16), the phase3 mlx_baseline runner
-  stock_mse4    stock optiq make_turbo_kv_caches(bits=4, use_qjl=False,
-                seed=42), the TurboQuant-MSE 4-bit runner of the round 1
-                phase3 table (reports/round1-experiment-log.md)
-  stock_k5v4    keys: stock TurboQuantProd 5 bits (Gaussian QJL,
-                sqrt(pi/2)/d scale, no damping); values: TurboQuantMSE 4 bits
-  patched_k5v4  tq_patched.make_turbo_kv_caches(bits=(5, 4), use_qjl=True,
-                seed=42), the phase3 mlx_turbo runner
+  baseline          mlx-lm KVCache (FP16), the phase3 mlx_baseline runner
+  stock_mse4        stock optiq make_turbo_kv_caches(bits=4, use_qjl=False,
+                    seed=42), the TurboQuant-MSE 4-bit runner of the round 1
+                    phase3 table (reports/round1-experiment-log.md)
+  stock_k5v4        keys: stock TurboQuantProd 5 bits (Gaussian QJL,
+                    sqrt(pi/2)/d scale, no damping); values: TurboQuantMSE 4 bits
+  stock_mse_k5v4    keys: TurboQuantMSE 5 bits (no QJL); values: TurboQuantMSE 4 bits
+  patched_k5v4      tq_patched.make_turbo_kv_caches(bits=(5, 4), use_qjl=True,
+                    seed=42), the phase3 mlx_turbo runner
 
 Usage:
   python benchmarks/needle_repro.py --out logs/needle-repro-2026-10-05.json
@@ -53,6 +54,8 @@ CONFIGS = {
     "stock_mse4": lambda n: make_stock_caches(n, HEAD_DIM, bits=4, use_qjl=False, seed=42),
     "stock_k5v4": lambda n: tq_patched.make_turbo_kv_caches(
         n, HEAD_DIM, bits=(5, 4), use_qjl=True, seed=42, patched=False),
+    "stock_mse_k5v4": lambda n: tq_patched.make_turbo_kv_caches(
+        n, HEAD_DIM, bits=(5, 4), use_qjl=False, seed=42),
     "patched_k5v4": lambda n: tq_patched.make_turbo_kv_caches(
         n, HEAD_DIM, bits=(5, 4), use_qjl=True, seed=42),
 }

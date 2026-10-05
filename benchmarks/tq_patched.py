@@ -54,11 +54,13 @@ class OrthogonalQJLProd(TurboQuantProd):
 
 
 class HybridTurboKVCache(TurboQuantKVCache):
-    """K = TurboQuantProd(k_bits), V = TurboQuantMSE(v_bits).
+    """K = TurboQuantProd(k_bits) (or TurboQuantMSE if use_qjl=False), V = TurboQuantMSE(v_bits).
 
     patched=True uses OrthogonalQJLProd for keys (the phase3 configuration).
     patched=False uses the stock Gaussian TurboQuantProd for keys, which is the
     same bit allocation with the paper-faithful QJL and no damping.
+    use_qjl=False uses TurboQuantMSE for keys, testing pure MSE bit allocation
+    without QJL residual correction.
     """
 
     def __init__(
@@ -68,10 +70,13 @@ class HybridTurboKVCache(TurboQuantKVCache):
         seed: int = 42,
         k_damping: float = 0.7,
         patched: bool = True,
+        use_qjl: bool = True,
     ):
         k_bits, v_bits = bits
         super().__init__(head_dim, v_bits, use_qjl=False, seed=seed)
-        if patched:
+        if not use_qjl:
+            self.k_quantizer = TurboQuantMSE(head_dim, k_bits, seed)
+        elif patched:
             self.k_quantizer = OrthogonalQJLProd(head_dim, k_bits, seed, damping=k_damping)
         else:
             self.k_quantizer = TurboQuantProd(head_dim, k_bits, seed)
@@ -88,10 +93,9 @@ def make_turbo_kv_caches(
     patched: bool = True,
 ) -> list[HybridTurboKVCache]:
     """One HybridTurboKVCache per layer, seeded seed + layer index like stock."""
-    if not use_qjl:
-        raise ValueError("Hybrid K5/V4 needs use_qjl=True; use the stock "
-                         "optiq make_turbo_kv_caches for MSE-only caches")
     return [
-        HybridTurboKVCache(head_dim, bits, seed + i, k_damping=k_damping, patched=patched)
+        HybridTurboKVCache(
+            head_dim, bits, seed + i, k_damping=k_damping, patched=patched, use_qjl=use_qjl
+        )
         for i in range(n_layers)
     ]

@@ -33,6 +33,7 @@ reports/                        All experiment logs and reports
     round1-session-handoff-readme.md  Session handoff context document
     reproduction-and-ablation-2026-07-03.md   Follow-up: 2K reproduction and QJL ablation results
 logs/                           All llama-cli debug and test run logs, needle prompts, MLX raw outputs
+    needle-control-k5v4-mse.json        Pure MSE K5/V4 control run, 2K to 16K, no QJL
     needle-repro-2026-10-05.json        Needle runs, all MLX configs, 2K to 16K, full responses
     kv-memory-16k-2026-10-05.json       Stored KV bytes and MLX peak memory at 16K, 5 rounds
     hybrid-reproduction-2026-07-03.json Hybrid K5/V4 rerun with the original modified optiq files
@@ -122,14 +123,19 @@ The needle score counts two facts, FROSTBLOCK-7 and VcMYB4, matched without rega
 | MLX Hybrid K5/V4 (orthogonal QJL, matched scale, 0.7 damping) | 4K | 100% | 50% | same |
 | MLX Hybrid K5/V4 (orthogonal QJL, matched scale, 0.7 damping) | 8K | 100% | 50% | same |
 | MLX Hybrid K5/V4 (orthogonal QJL, matched scale, 0.7 damping) | 16K | 100% | 100% | same |
+| MLX pure MSE K5/V4 (5-bit MSE keys, 4-bit MSE values, no QJL) | 2K | not run | 100% | `logs/needle-control-k5v4-mse.json` |
+| MLX pure MSE K5/V4 (5-bit MSE keys, 4-bit MSE values, no QJL) | 4K | not run | 50% | same |
+| MLX pure MSE K5/V4 (5-bit MSE keys, 4-bit MSE values, no QJL) | 8K | not run | 50% | same |
+| MLX pure MSE K5/V4 (5-bit MSE keys, 4-bit MSE values, no QJL) | 16K | not run | 100% | same |
 | Aaryan fork tq3\_0 CPU, before norm fix | sanity prompt | Degenerate (repetitive) | not rerun | `logs/debug-k-tq3_0-v-f16-ngl0.log` |
 | Aaryan fork tq3\_0 after all fixes | 2K, 4K needle | Both facts retrieved | not rerun | `logs/needle-2k-tq3_0.log`, `logs/needle-4k-tq3_0.log` |
 
-Notes on the Hybrid rows:
+Notes on the Hybrid and control rows:
 
 * At 2K the recorded run retrieved VcMYB4 but wrote "FROSTst7" instead of "FROSTBLOCK-7". The 2026-07-03 rerun with the original modified package files gave the same text, the same scores, and the same MLX peak memory (within 0.1 MB) at all four lengths (`logs/hybrid-reproduction-2026-07-03.json`). The round 1 post-mortem report asserts 100% at 2K in its summary, but no raw output supports it.
 * The recorded 4K pass depends on the case-insensitive match. The response wrote "FROstblock-7".
 * The 2026-10-05 rerun uses `benchmarks/tq_patched.py`, a rebuild of the lost modified files. It scored 50% at 2K, 4K, and 8K: at 2K and 4K it wrote a corrupted allele name, and at 8K it gave only the locus. At 16K it wrote both facts exactly. See "Reproduction on 2026-10-05" in `FINDINGS.md` for the evidence that the rebuild is not op-for-op identical to the original.
+* The pure MSE K5/V4 control row (`logs/needle-control-k5v4-mse.json`) uses 5-bit Lloyd-Max MSE on keys and 4-bit MSE on values with no QJL stage (`use_qjl=False` in `benchmarks/tq_patched.py`). Under case-insensitive scoring it scored 100% at 2K, 50% at 4K, 50% at 8K, and 100% at 16K, matching or exceeding the 2026-10-05 rebuild of the patched QJL hybrid across all lengths (under exact-case scoring it scored 0% at 2K and 50% at 16K because it wrote "VcMYb4"). This demonstrates that allocating the fifth bit to scalar quantization carries the 16K retrieval result without requiring QJL. At 16K it stored 290.4 MB of cache (33 percent less than the 435.6 MB Hybrid QJL cache) and peaked at 2988.0 MB (88.8 MB below the FP16 baseline on this rebuild).
 
 ## Speed and Memory Reference
 
@@ -141,20 +147,21 @@ Speed at 16K tokens (15947 prompt tokens, up to 80 generated) with Qwen2.5-3B on
 | MLX baseline FP16 | 2.0 (prefill included) | 39.9 s |
 | MLX Hybrid K5/V4 | 1.1 (prefill included) | 71.4 s |
 
-The phase3 request to Ollama sets no KV cache type, so Ollama used its default, f16, unless `OLLAMA_KV_CACHE_TYPE` was set on the server. No raw output records the server settings. The two tokens-per-second figures measure different things. Ollama reports its own decode rate, which excludes the prompt. The MLX figure divides the generated tokens by the total time, which includes the 16K prefill. Wall time is the closer comparison, but the Ollama wall time also covers the HTTP call and any model load. The Hybrid cache is slower than FP16 because it dequantizes the full cache at every step, with 128x128 matrix multiplies, in unfused MLX operations.
+The phase3 request to Ollama sets no KV cache type, so Ollama used its default, f16, unless `OLLAMA_KV_CACHE_TYPE` was set on the server. No raw output records the server settings. The two tokens-per-second figures measure different things. Ollama reports its own decode rate, which excludes the prompt. The MLX figure divides the generated tokens by the total time, which includes the 16K prefill. Wall time is the closer comparison, but the Ollama wall time also covers the HTTP call and any model load. The Hybrid cache is slower than FP16 because it dequantizes the full cache at every step, with 128x128 matrix multiplies, in unfused MLX operations. In the 2026-10-05 rerun, the rebuild of Hybrid K5/V4 took 65.1 s (1.2 tok/s) and pure MSE K5/V4 took 65.2 s (1.2 tok/s, `logs/needle-control-k5v4-mse.json`), showing no wall-time difference between them.
 
-KV memory at 16K tokens, from `logs/kv-memory-16k-2026-10-05.json`. Each configuration ran 5 times in alternating order, and all 5 runs gave identical values. MB is 2^20 bytes. The model weights take 1655.8 MB.
+KV memory at 16K tokens, from `logs/kv-memory-16k-2026-10-05.json` (except the pure MSE control row, which is a single run from `logs/needle-control-k5v4-mse.json`). Each configuration in the kv-memory harness ran 5 times in alternating order, and all 5 runs gave identical values. MB is 2^20 bytes. The model weights take 1655.8 MB.
 
 | Cache | Stored K/V | Smaller than FP16 by | MLX peak | Peak vs FP16 |
 |---|---|---|---|---|
 | FP16 baseline | 563.4 MB | 1.00x | 3076.8 MB | 0 MB |
+| Pure MSE K5/V4 (`needle-control-k5v4-mse.json`) | 290.4 MB | 1.94x | 2988.0 MB | -88.8 MB |
 | Stock MSE-only 4-bit | 290.4 MB | 1.94x | 3190.6 MB | +113.8 MB |
 | Hybrid K5/V4 (`tq_patched.py`) | 435.6 MB | 1.29x | 3245.4 MB | +168.6 MB |
 | Hybrid K5/V4, K/V cast to FP16 before attention (diagnostic) | 429.2 MB | 1.31x | 2867.6 MB | -209.2 MB |
 
 The stored cache is smaller than the bit counts suggest. mlx-optiq 0.0.1 stores one byte per element: uint8 codebook indices and int8 QJL signs, not packed bits. Per token and layer, FP16 K/V takes 1024 bytes, MSE-only 4-bit takes 528 bytes, and Hybrid K5/V4 takes 792 bytes. A bit-packed Hybrid layout would take about 300 bytes, 3.4x smaller than FP16. The phase3 harness printed this formula figure as `kv_theoretical_mb` (157.7 MB at 16K). An earlier version of this README gave "562 MB to 140 MB, 4.0x compression confirmed". Those were formula figures for a packed 4-bit cache, not measurements.
 
-Peak memory is higher with either quantized cache, not lower. The stock and patched caches return the dequantized K/V in float32. Attention and the residual stream then run in float32 for every layer after the first. The peak occurs during prefill, where the float32 buffers cost more than the smaller cache saves. The diagnostic row casts the K/V back to FP16 before attention. Its peak drops by 378 MB, to 209 MB below the FP16 baseline. The phase3 Hybrid peak was 3303.7 MB, 58 MB above the rebuild (see "Reproduction on 2026-10-05" in `FINDINGS.md`).
+Peak memory is higher with the stock 4-bit MSE and Hybrid QJL caches, not lower. Those caches return the dequantized K/V in float32. Attention and the residual stream then run in float32 for every layer after the first. The peak occurs during prefill, where the float32 buffers cost more than the smaller cache saves. The diagnostic row casts the K/V back to FP16 before attention. Its peak drops by 378 MB, to 209 MB below the FP16 baseline. The pure MSE K5/V4 control configuration also achieved a lower whole-run peak (2988.0 MB, 88.8 MB below the FP16 baseline on this rebuild). The phase3 Hybrid peak was 3303.7 MB, 58 MB above the rebuild (see "Reproduction on 2026-10-05" in `FINDINGS.md`).
 
 For Qwen2.5-3B at 16K on 16 GB, the cache size does not matter in practice: the FP16 run peaks at 3.1 GB.
 
